@@ -31,10 +31,25 @@ def get_node_info(node_id, team_data):
     """노드 ID에 해당하는 정보를 가져오는 함수"""
     if node_id == "나":
         owner_info = team_data.get('owner_info', {})
+        
+        # team_info.members에서 사용자의 isLeader 정보 찾기
+        is_leader = False
+        team_info = team_data.get('team_info', {})
+        members_str = team_info.get('members', '[]')
+        try:
+            members = json.loads(members_str)
+            for member in members:
+                if member.get('isUser', False):
+                    is_leader = member.get('isLeader', False)
+                    break
+        except json.JSONDecodeError:
+            pass
+        
         return {
             'name': owner_info.get('name', '나'),
             'type': 'user',
-            'professional': 'Owner'
+            'professional': 'Owner',
+            'isLeader': is_leader
         }
     
     # A, B, C, D, E 형태의 node_key로 agent 찾기
@@ -82,17 +97,49 @@ def create_team_network_visualization(team_data, team_index):
     positions = parse_positions(team_info.get('nodePositions', '{}'))
     relationships = parse_relationships(team_info.get('relationships', '[]'))
     
-    # relationships에서 agent ID를 node_key로 변환
-    converted_relationships = []
+    # 실제 존재하는 agent들의 ID를 수집
+    existing_agent_ids = set()
+    for agent in team_data.get('agents', []):
+        existing_agent_ids.add(agent['agentId'])
+    
+    # relationships에서 실제 존재하는 agent만 사용하도록 필터링
+    filtered_relationships = []
     for rel in relationships:
-        from_node = rel['from'] if rel['from'] == '나' else convert_agent_id_to_node_key(rel['from'], team_data)
-        to_node = rel['to'] if rel['to'] == '나' else convert_agent_id_to_node_key(rel['to'], team_data)
-        converted_relationships.append({
-            'from': from_node,
-            'to': to_node,
-            'type': rel['type']
-        })
-    relationships = converted_relationships
+        from_node = rel['from']
+        to_node = rel['to']
+        
+        # '나'는 항상 포함, agent의 경우 실제 존재하는지 확인
+        from_exists = from_node == '나' or from_node in existing_agent_ids
+        to_exists = to_node == '나' or to_node in existing_agent_ids
+        
+        if from_exists and to_exists:
+            # agent ID를 node_key로 변환
+            from_node = from_node if from_node == '나' else convert_agent_id_to_node_key(from_node, team_data)
+            to_node = to_node if to_node == '나' else convert_agent_id_to_node_key(to_node, team_data)
+            filtered_relationships.append({
+                'from': from_node,
+                'to': to_node,
+                'type': rel['type']
+            })
+    relationships = filtered_relationships
+    
+    # positions에서도 실제 존재하지 않는 agent 노드 제거
+    filtered_positions = {}
+    for node_id, pos in positions.items():
+        if node_id == '나':
+            filtered_positions[node_id] = pos
+        else:
+            # node_key를 agent_id로 변환해서 확인
+            agent_id = None
+            for agent in team_data.get('agents', []):
+                if agent.get('node_key') == node_id:
+                    agent_id = agent['agentId']
+                    break
+            
+            if agent_id and agent_id in existing_agent_ids:
+                filtered_positions[node_id] = pos
+    
+    positions = filtered_positions
     
     if not positions:
         print(f"팀 {team_index + 1}: nodePositions가 없어서 스킵합니다.")
@@ -114,7 +161,7 @@ def create_team_network_visualization(team_data, team_index):
         
         # 리더인 경우 테두리 추가
         if node_info.get('isLeader', False):
-            border_color = '#E74C3C'
+            border_color = '#3498DB'
             linewidth = 3
         else:
             border_color = 'black'
@@ -204,7 +251,7 @@ def create_team_network_visualization(team_data, team_index):
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#4ECDC4', 
                   markersize=10, label='Agent'),
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#4ECDC4', 
-                  markersize=10, markeredgecolor='#E74C3C', markeredgewidth=3, label='Leader Agent'),
+                  markersize=10, markeredgecolor='#3498DB', markeredgewidth=3, label='Leader Agent'),
         patches.FancyArrowPatch((0, 0), (0.3, 0), arrowstyle='->', color='black', linewidth=3, label='Supervisor (→)'),
         plt.Line2D([0], [0], color='#34495E', linewidth=2, label='Peer (—)')
     ]
