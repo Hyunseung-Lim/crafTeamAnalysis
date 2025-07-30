@@ -1,5 +1,7 @@
 import json
 import csv
+import shutil
+import os
 
 def get_agent_info(data, agent_id):
     """특정 agent의 상세 정보를 가져오는 함수"""
@@ -189,6 +191,11 @@ if __name__ == "__main__":
         json.dump(teams_list, f, ensure_ascii=False, indent=2)
     
     print(f"총 {len(teams_list)}개 팀 데이터를 structured_teams.json에 저장했습니다.")
+    
+    # tdv 프로젝트가 있으면 복사
+    if os.path.exists('tdv/src'):
+        shutil.copy2('structured_teams.json', 'tdv/src/structured_teams.json')
+        print("structured_teams.json을 tdv/src/에 복사했습니다.")
     
     # 각 팀별 데이터 요약 출력
     for i, team in enumerate(teams_list, 1):

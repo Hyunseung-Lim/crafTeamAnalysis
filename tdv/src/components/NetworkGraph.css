@@ -1,0 +1,105 @@
+/* NetworkGraph.css */
+.network-graph-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 2rem;
+  min-height: 400px;
+}
+
+.network-graph-svg {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 노드 스타일 */
+.node-circle {
+  stroke-width: 2;
+}
+
+.node-circle.user {
+  fill: #667eea;
+  stroke: #5a67d8;
+}
+
+.node-circle.agent {
+  fill: #805ad5;
+  stroke: #6b46c1;
+}
+
+.node-circle.unknown {
+  fill: #a0aec0;
+  stroke: #718096;
+}
+
+.node-circle.leader {
+  stroke: #f6e05e;
+  stroke-width: 4;
+}
+
+/* 노드 텍스트 */
+.node-key {
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+
+.node-name {
+  fill: #2d3748;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.node-role {
+  fill: #718096;
+  font-size: 10px;
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* 관계선 스타일 */
+.relationship-line {
+  stroke-width: 2;
+}
+
+.relationship-line.supervisor {
+  stroke: #4a5568;
+  stroke-dasharray: none;
+}
+
+.relationship-line.peer {
+  stroke: #718096;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .network-graph-container {
+    padding: 1rem;
+    min-height: 300px;
+  }
+  
+  .network-graph-svg {
+    width: 100%;
+    height: auto;
+  }
+  
+  .node-name {
+    font-size: 10px;
+  }
+  
+  .node-role {
+    font-size: 8px;
+  }
+  
+  .node-key {
+    font-size: 12px;
+  }
+}
