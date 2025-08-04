@@ -99,8 +99,41 @@ const NetworkGraph = ({ team }) => {
     console.log('Positions:', positions);
     console.log('Relationships:', relationships);
     
+    // 실제 존재하는 agent들의 ID를 수집
+    const existingAgentIds = new Set();
+    for (const agent of team.agents || []) {
+      existingAgentIds.add(agent.agentId);
+    }
+
+    // positions에서 실제 존재하지 않는 agent 노드 제거
+    const filteredPositions = {};
+    for (const [nodeId, pos] of Object.entries(positions)) {
+      if (nodeId === '나') {
+        filteredPositions[nodeId] = pos;
+      } else {
+        // node_key를 agent_id로 변환해서 확인
+        let agentId = null;
+        for (const agent of team.agents || []) {
+          if (agent.node_key === nodeId) {
+            agentId = agent.agentId;
+            break;
+          }
+        }
+        
+        if (agentId && existingAgentIds.has(agentId)) {
+          filteredPositions[nodeId] = pos;
+        }
+      }
+    }
+
+    if (Object.keys(filteredPositions).length === 0) {
+      console.log('No valid positions found, using default layout');
+      createDefaultLayout(svg, team, width, height);
+      return;
+    }
+    
     // 좌표를 정규화 (원본과 반대로)
-    const positionArray = Object.values(positions);
+    const positionArray = Object.values(filteredPositions);
     const minX = Math.min(...positionArray.map(p => p.x));
     const maxX = Math.max(...positionArray.map(p => p.x));
     const minY = Math.min(...positionArray.map(p => p.y));
@@ -111,7 +144,7 @@ const NetworkGraph = ({ team }) => {
     const scaleY = (height - 2 * padding) / (maxY - minY || 1);
 
     const normalizedPositions = {};
-    for (const [nodeId, pos] of Object.entries(positions)) {
+    for (const [nodeId, pos] of Object.entries(filteredPositions)) {
       // X축은 그대로, Y축은 반대로
       normalizedPositions[nodeId] = {
         x: padding + (pos.x - minX) * scaleX,
@@ -126,33 +159,40 @@ const NetworkGraph = ({ team }) => {
     relationshipsG.setAttribute('class', 'relationships');
     svg.appendChild(relationshipsG);
 
-    // 관계선을 agent ID에서 node key로 변환하는 로직 추가
-    const processedRelationships = relationships.map(rel => {
-      let fromKey = rel.from;
-      let toKey = rel.to;
-
-      // 'from'이 agent ID인 경우 node key로 변환
-      if (fromKey !== '나') {
-        const fromAgent = team.agents.find(agent => agent.agentId === fromKey);
-        if (fromAgent) {
-          fromKey = fromAgent.node_key;
+    // relationships에서 실제 존재하는 agent만 사용하도록 필터링
+    const filteredRelationships = [];
+    for (const rel of relationships) {
+      let fromNode = rel.from;
+      let toNode = rel.to;
+      
+      // '나'는 항상 포함, agent의 경우 실제 존재하는지 확인
+      const fromExists = fromNode === '나' || existingAgentIds.has(fromNode);
+      const toExists = toNode === '나' || existingAgentIds.has(toNode);
+      
+      if (fromExists && toExists) {
+        // agent ID를 node_key로 변환
+        if (fromNode !== '나') {
+          const fromAgent = team.agents.find(agent => agent.agentId === fromNode);
+          if (fromAgent) {
+            fromNode = fromAgent.node_key;
+          }
         }
-      }
-
-      // 'to'가 agent ID인 경우 node key로 변환
-      if (toKey !== '나') {
-        const toAgent = team.agents.find(agent => agent.agentId === toKey);
-        if (toAgent) {
-          toKey = toAgent.node_key;
+        if (toNode !== '나') {
+          const toAgent = team.agents.find(agent => agent.agentId === toNode);
+          if (toAgent) {
+            toNode = toAgent.node_key;
+          }
         }
+        
+        filteredRelationships.push({
+          from: fromNode,
+          to: toNode,
+          type: rel.type
+        });
       }
+    }
 
-      return {
-        from: fromKey,
-        to: toKey,
-        type: rel.type
-      };
-    });
+    const processedRelationships = filteredRelationships;
 
     console.log('Processed relationships:', processedRelationships);
 
