@@ -2,54 +2,18 @@ import json
 import csv
 import shutil
 import os
+import sys
 
-def get_agent_info(data, agent_id):
-    """특정 agent의 상세 정보를 가져오는 함수"""
-    agent_key = f"agent:{agent_id}"
-    if agent_key in data and data[agent_key]['type'] == 'hash':
-        return data[agent_key]['value']
-    return None
-
-def get_user_info(data, user_id):
-    """특정 user의 상세 정보를 가져오는 함수"""
-    # ownerId가 이미 user_ prefix를 포함하고 있는 경우 처리
-    if user_id.startswith('user_'):
-        user_key = f"user:{user_id}"
-    else:
-        user_key = f"user:user_{user_id}"
-    
-    if user_key in data and data[user_key]['type'] == 'hash':
-        user_info = data[user_key]['value']
-        
-        # 추가로 agent 정보도 찾아서 더 자세한 정보 가져오기
-        # 같은 email을 가진 agent가 있는지 확인
-        user_email = user_info.get('email', '')
-        if user_email:
-            for key, value in data.items():
-                if key.startswith('agent:') and value['type'] == 'hash':
-                    agent_data = value['value']
-                    if agent_data.get('userId') == user_email:
-                        # agent 정보에서 추가 필드들을 user_info에 병합
-                        additional_fields = [
-                            'age', 'education', 'personality', 'nationality', 
-                            'preferences', 'personaSummary', 'workStyle', 
-                            'gender', 'major', 'dislikes', 'professional', 
-                            'skills', 'value'
-                        ]
-                        for field in additional_fields:
-                            if field in agent_data and field not in user_info:
-                                user_info[field] = agent_data[field]
-                        break
-        
-        return user_info
-    return None
+# 상위 디렉토리의 analyze_redis.py 모듈을 import
+sys.path.append('..')
+from analyze_redis import get_agent_info, get_user_info
 
 def analyze_redis_data():
     """
     redis.json에서 team 데이터를 분석하고 구조화된 데이터를 생성하는 함수
     team:team__* 패턴의 hash 데이터와 해당 팀의 idea, chat 데이터를 연결
     """
-    with open('redis.json', 'r', encoding='utf-8') as f:
+    with open('../redis.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     teams = {}
@@ -118,7 +82,7 @@ def analyze_redis_data():
 def load_evaluation_data():
     """AI Team 인사 평가.csv에서 평가 데이터를 로드하는 함수"""
     evaluations = []
-    with open('AI Team 인사 평가.csv', 'r', encoding='utf-8') as f:
+    with open('../AI Team 인사 평가.csv', 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             evaluations.append(row)
@@ -213,15 +177,10 @@ if __name__ == "__main__":
     teams_list = map_evaluations_to_teams(teams_list, evaluations)
     
     # 최종 데이터 저장
-    with open('structured_teams.json', 'w', encoding='utf-8') as f:
+    with open('src/structured_teams.json', 'w', encoding='utf-8') as f:
         json.dump(teams_list, f, ensure_ascii=False, indent=2)
     
-    print(f"총 {len(teams_list)}개 팀 데이터를 structured_teams.json에 저장했습니다.")
-    
-    # tdv 프로젝트가 있으면 복사
-    if os.path.exists('tdv/src'):
-        shutil.copy2('structured_teams.json', 'tdv/src/structured_teams.json')
-        print("structured_teams.json을 tdv/src/에 복사했습니다.")
+    print(f"총 {len(teams_list)}개 팀 데이터를 src/structured_teams.json에 저장했습니다.")
     
     # 각 팀별 데이터 요약 출력
     for i, team in enumerate(teams_list, 1):
@@ -233,10 +192,3 @@ if __name__ == "__main__":
         agents_count = len(team['agents'])
         eval_count = len(team['evaluations'])
         print(f"- 팀 {i}: {team_id} ({team_name}) [소유자: {owner_name}]: agents {agents_count}개, ideas {ideas_count}개, chat {chat_count}개, 평가 {eval_count}개")
-        
-        # 각 팀의 agent 리스트 출력
-        for agent in team['agents']:
-            leader_mark = " (리더)" if agent['isLeader'] else ""
-            agent_name = agent['agent_info'].get('name', 'Unknown') if agent['agent_info'] else 'Unknown'
-            agent_professional = agent['agent_info'].get('professional', '') if agent['agent_info'] else ''
-            print(f"  └ {agent['agentId']}{leader_mark} ({agent_name} - {agent_professional}): {', '.join(agent['roles'])}")

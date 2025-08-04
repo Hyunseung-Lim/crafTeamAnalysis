@@ -1,20 +1,18 @@
 import React from 'react';
 import './TeamCard.css';
+import MiniNetworkGraph from './MiniNetworkGraph';
 
 const TeamCard = ({ team, onSelect }) => {
-  const getAgentRoles = (agents) => {
-    const allRoles = agents.flatMap(agent => agent.roles);
-    const uniqueRoles = [...new Set(allRoles)];
-    return uniqueRoles.slice(0, 3).join(', ') + (uniqueRoles.length > 3 ? '...' : '');
+  const getTeamNumber = (displayNumber) => {
+    // P5_team#3 -> team #3
+    const match = displayNumber.match(/team#(\d+)$/);
+    return match ? `team #${match[1]}` : displayNumber;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('ko-KR');
-  };
-
-  const getLeaderAgent = (agents) => {
-    return agents.find(agent => agent.isLeader);
+  const getParticipantNumber = (displayNumber) => {
+    // P5_team#3 -> P5
+    const match = displayNumber.match(/^(P\d+)_/);
+    return match ? match[1] : '';
   };
 
   const calculateActivityStats = (chatMessages) => {
@@ -62,11 +60,11 @@ const TeamCard = ({ team, onSelect }) => {
       <div className="team-card-header">
         <div className="team-title">
           <h3 className="team-name">{team.team_info?.teamName || 'Unknown Team'}</h3>
-          <span className="team-index">{team.displayNumber}</span>
+          <span className="team-index">{getTeamNumber(team.displayNumber)}</span>
         </div>
         <div className="owner-info">
           <span className="owner-label">소유자:</span>
-          <span className="owner-name">{team.owner_info?.name || 'Unknown'}</span>
+          <span className="owner-name">{team.owner_info?.name || 'Unknown'} ({getParticipantNumber(team.displayNumber)})</span>
         </div>
       </div>
       
@@ -76,17 +74,7 @@ const TeamCard = ({ team, onSelect }) => {
           <p className="topic-text">{team.team_info?.topic || 'N/A'}</p>
         </div>
         
-        <div className="mental-model-section">
-          <span className="mental-model-label">공유 모델:</span>
-          <p className="mental-model-text">{team.team_info?.sharedMentalModel || 'N/A'}</p>
-        </div>
         
-        <div className="team-meta">
-          <div className="meta-item">
-            <span className="meta-label">생성일:</span>
-            <span className="meta-value">{formatDate(team.team_info?.createdAt)}</span>
-          </div>
-        </div>
       </div>
       
       <div className="team-stats">
@@ -115,21 +103,10 @@ const TeamCard = ({ team, onSelect }) => {
         })()}
       </div>
       
-      <div className="agent-preview">
-        <div className="agent-roles">
-          <span className="roles-label">주요 역할:</span>
-          <span className="roles-text">{getAgentRoles(team.agents)}</span>
-        </div>
-        
-        {getLeaderAgent(team.agents) && (
-          <div className="leader-info">
-            <span className="leader-label">팀 리더:</span>
-            <span className="leader-name">
-              {getLeaderAgent(team.agents).agent_info?.name || 'Unknown'}
-            </span>
-          </div>
-        )}
+      <div className="network-preview">
+        <MiniNetworkGraph team={team} />
       </div>
+      
       
       <div className="team-card-footer">
         <button className="view-detail-btn">자세히 보기 →</button>

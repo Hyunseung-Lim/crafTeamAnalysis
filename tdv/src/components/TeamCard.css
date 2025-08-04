@@ -144,6 +144,10 @@
   font-weight: 500;
 }
 
+.network-preview {
+  margin-bottom: 1rem;
+}
+
 .agent-preview {
   margin-bottom: 1.5rem;
 }

@@ -26,13 +26,6 @@ const TeamDetail = ({ team, onBack }) => {
     }
   };
 
-  const parseNodePositions = (nodePositionsString) => {
-    try {
-      return JSON.parse(nodePositionsString);
-    } catch {
-      return {};
-    }
-  };
 
   const calculateActivityStats = (chatMessages) => {
     if (!chatMessages || chatMessages.length === 0) {
@@ -164,37 +157,75 @@ const TeamDetail = ({ team, onBack }) => {
                 <div className="agent-detail">
                   <span className="detail-label">직업:</span>
                   <span className="detail-value">
-                    {team.owner_info.professional || 'N/A'}
+                    {team.owner_info.professional || '없음'}
                   </span>
                 </div>
                 
-                <div className="agent-detail">
-                  <span className="detail-label">나이:</span>
-                  <span className="detail-value">
-                    {team.owner_info.age || 'N/A'}
-                  </span>
+                <div className="agent-detail age-gender-row">
+                  <div className="detail-item">
+                    <span className="detail-label">나이:</span>
+                    <span className="detail-value">
+                      {team.owner_info.age || '없음'}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">성별:</span>
+                    <span className="detail-value">
+                      {team.owner_info.gender || '없음'}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="agent-detail">
-                  <span className="detail-label">성별:</span>
-                  <span className="detail-value">
-                    {team.owner_info.gender || 'N/A'}
-                  </span>
+                <div className="agent-detail education-major-row">
+                  <div className="detail-item">
+                    <span className="detail-label">학력:</span>
+                    <span className="detail-value">
+                      {team.owner_info.education || '없음'}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">전공:</span>
+                    <span className="detail-value">
+                      {team.owner_info.major || '없음'}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="agent-detail">
-                  <span className="detail-label">학력:</span>
-                  <span className="detail-value">
-                    {team.owner_info.education || 'N/A'}
-                  </span>
-                </div>
+                {team.owner_info.personality && (
+                  <div className="agent-detail">
+                    <span className="detail-label">성격:</span>
+                    <span className="detail-value">
+                      {team.owner_info.personality}
+                    </span>
+                  </div>
+                )}
                 
-                <div className="agent-detail">
-                  <span className="detail-label">전공:</span>
-                  <span className="detail-value">
-                    {team.owner_info.major || 'N/A'}
-                  </span>
-                </div>
+                {team.owner_info.preferences && (
+                  <div className="agent-detail">
+                    <span className="detail-label">좋아하는 것:</span>
+                    <span className="detail-value">
+                      {team.owner_info.preferences}
+                    </span>
+                  </div>
+                )}
+                
+                {team.owner_info.dislikes && (
+                  <div className="agent-detail">
+                    <span className="detail-label">싫어하는 것:</span>
+                    <span className="detail-value">
+                      {team.owner_info.dislikes}
+                    </span>
+                  </div>
+                )}
+                
+                {team.owner_info.workStyle && (
+                  <div className="agent-detail">
+                    <span className="detail-label">업무방식:</span>
+                    <span className="detail-value">
+                      {team.owner_info.workStyle}
+                    </span>
+                  </div>
+                )}
                 
                 {team.owner_info.skills && (
                   <div className="agent-detail">
@@ -238,23 +269,75 @@ const TeamDetail = ({ team, onBack }) => {
               <div className="agent-detail">
                 <span className="detail-label">직업:</span>
                 <span className="detail-value">
-                  {agent.agent_info?.professional || 'N/A'}
+                  {agent.agent_info?.professional || '없음'}
                 </span>
               </div>
               
-              <div className="agent-detail">
-                <span className="detail-label">나이:</span>
-                <span className="detail-value">
-                  {agent.agent_info?.age || 'N/A'}
-                </span>
+              <div className="agent-detail age-gender-row">
+                <div className="detail-item">
+                  <span className="detail-label">나이:</span>
+                  <span className="detail-value">
+                    {agent.agent_info?.age || '없음'}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">성별:</span>
+                  <span className="detail-value">
+                    {agent.agent_info?.gender || '없음'}
+                  </span>
+                </div>
               </div>
               
-              <div className="agent-detail">
-                <span className="detail-label">성별:</span>
-                <span className="detail-value">
-                  {agent.agent_info?.gender || 'N/A'}
-                </span>
+              <div className="agent-detail education-major-row">
+                <div className="detail-item">
+                  <span className="detail-label">학력:</span>
+                  <span className="detail-value">
+                    {agent.agent_info?.education || '없음'}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">전공:</span>
+                  <span className="detail-value">
+                    {agent.agent_info?.major || '없음'}
+                  </span>
+                </div>
               </div>
+              
+              {agent.agent_info?.personality && (
+                <div className="agent-detail">
+                  <span className="detail-label">성격:</span>
+                  <span className="detail-value">
+                    {agent.agent_info.personality}
+                  </span>
+                </div>
+              )}
+              
+              {agent.agent_info?.preferences && (
+                <div className="agent-detail">
+                  <span className="detail-label">좋아하는 것:</span>
+                  <span className="detail-value">
+                    {agent.agent_info.preferences}
+                  </span>
+                </div>
+              )}
+              
+              {agent.agent_info?.dislikes && (
+                <div className="agent-detail">
+                  <span className="detail-label">싫어하는 것:</span>
+                  <span className="detail-value">
+                    {agent.agent_info.dislikes}
+                  </span>
+                </div>
+              )}
+              
+              {agent.agent_info?.workStyle && (
+                <div className="agent-detail">
+                  <span className="detail-label">업무방식:</span>
+                  <span className="detail-value">
+                    {agent.agent_info.workStyle}
+                  </span>
+                </div>
+              )}
               
               {agent.agent_info?.skills && (
                 <div className="agent-detail">
@@ -285,9 +368,6 @@ const TeamDetail = ({ team, onBack }) => {
 
 
   const renderNetwork = () => {
-    const members = parseMembers(team.team_info?.members || '[]');
-    const relationships = parseRelationships(team.team_info?.relationships || '[]');
-
     return (
       <div className="network-section">
         <h3>팀 네트워크</h3>
