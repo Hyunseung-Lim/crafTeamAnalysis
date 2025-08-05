@@ -89,7 +89,7 @@ def convert_agent_id_to_node_key(agent_id, team_data):
             return agent.get('node_key', agent_id)
     return agent_id
 
-def create_team_network_visualization(team_data, team_index):
+def create_team_network_visualization(team_data, team_index, team_number=None):
     """개별 팀의 네트워크 시각화를 생성하는 함수"""
     team_info = team_data['team_info']
     
@@ -232,7 +232,8 @@ def create_team_network_visualization(team_data, team_index):
     # 제목 설정
     owner_name = team_data.get('owner_info', {}).get('name', 'Unknown')
     team_name = team_info.get('teamName', 'Unknown Team')
-    ax.set_title(f'{owner_name} - {team_name}\n(Team {team_index + 1})', fontsize=14, weight='bold', pad=20)
+    display_team_number = team_number if team_number is not None else team_index + 1
+    ax.set_title(f'{owner_name} - {team_name}\n(Team {display_team_number})', fontsize=14, weight='bold', pad=20)
     
     # 축 설정
     ax.set_xlim(-50, max([pos['x'] for pos in positions.values()]) + 100)
@@ -281,8 +282,8 @@ def save_team_visualizations():
         
         team_number = owner_team_counts[owner_name]
         
-        # 시각화 생성
-        fig = create_team_network_visualization(team, i)
+        # 시각화 생성 (팀 번호 전달)
+        fig = create_team_network_visualization(team, i, team_number)
         
         if fig is not None:
             # 파일명 생성: 사람이름_team_번호
