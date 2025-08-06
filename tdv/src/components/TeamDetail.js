@@ -4,6 +4,7 @@ import NetworkGraph from './NetworkGraph';
 
 const TeamDetail = ({ team, onBack }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [networkColorMode, setNetworkColorMode] = useState('default'); // 'default' 또는 'role'
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -370,32 +371,80 @@ const TeamDetail = ({ team, onBack }) => {
   const renderNetwork = () => {
     return (
       <div className="network-section">
-        <h3>팀 네트워크</h3>
+        <div className="network-header">
+          <h3>팀 네트워크</h3>
+          <div className="network-controls">
+            <button 
+              className={`color-mode-btn ${networkColorMode === 'default' ? 'active' : ''}`}
+              onClick={() => setNetworkColorMode('default')}
+            >
+              기본 보기
+            </button>
+            <button 
+              className={`color-mode-btn ${networkColorMode === 'role' ? 'active' : ''}`}
+              onClick={() => setNetworkColorMode('role')}
+            >
+              역할별 보기
+            </button>
+          </div>
+        </div>
         
         {/* 네트워크 그래프 */}
         <div className="network-graph-wrapper">
-          <NetworkGraph team={team} />
+          <NetworkGraph team={team} colorMode={networkColorMode} />
         </div>
         
         {/* 범례 */}
         <div className="network-legend">
-          <div className="legend-section">
-            <h4>노드 타입</h4>
-            <div className="legend-items">
-              <div className="legend-item">
-                <div className="legend-circle user"></div>
-                <span>소유자 (나)</span>
+          {networkColorMode === 'default' ? (
+            <>
+              <div className="legend-section">
+                <h4>노드 타입</h4>
+                <div className="legend-items">
+                  <div className="legend-item">
+                    <div className="legend-circle user"></div>
+                    <span>소유자 (나)</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle agent"></div>
+                    <span>에이전트</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle agent leader"></div>
+                    <span>리더</span>
+                  </div>
+                </div>
               </div>
-              <div className="legend-item">
-                <div className="legend-circle agent"></div>
-                <span>에이전트</span>
+            </>
+          ) : (
+            <>
+              <div className="legend-section">
+                <h4>역할별 색상</h4>
+                <div className="legend-items">
+                  <div className="legend-item">
+                    <div className="legend-circle" style={{backgroundColor: '#0000FF'}}></div>
+                    <span>생성 역할 (실제 생성함)</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle" style={{backgroundColor: '#FF0000'}}></div>
+                    <span>평가/피드백 역할</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle" style={{backgroundColor: '#8A2BE2'}}></div>
+                    <span>생성 + 평가/피드백</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle" style={{backgroundColor: '#95A5A6'}}></div>
+                    <span>역할 없음</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-circle" style={{backgroundColor: '#0000FF', border: '3px solid #FFD700'}}></div>
+                    <span>리더 (노란 테두리)</span>
+                  </div>
+                </div>
               </div>
-              <div className="legend-item">
-                <div className="legend-circle agent leader"></div>
-                <span>리더</span>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
           
           <div className="legend-section">
             <h4>관계 타입</h4>

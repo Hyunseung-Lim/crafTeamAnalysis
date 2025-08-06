@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './NetworkGraph.css';
 
-const NetworkGraph = ({ team }) => {
+const NetworkGraph = ({ team, colorMode = 'default' }) => {
   const svgRef = useRef();
 
   useEffect(() => {
@@ -17,6 +17,24 @@ const NetworkGraph = ({ team }) => {
     svg.setAttribute('height', height);
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
+    // 화살표 마커 정의 추가
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', 'arrowhead');
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '7');
+    marker.setAttribute('refX', '9');
+    marker.setAttribute('refY', '3.5');
+    marker.setAttribute('orient', 'auto');
+    
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+    polygon.setAttribute('fill', '#4a5568');
+    
+    marker.appendChild(polygon);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
     // 데이터 파싱
     const positions = parseNodePositions(team.team_info?.nodePositions || '{}');
     const relationships = parseRelationships(team.team_info?.relationships || '[]');
@@ -29,7 +47,7 @@ const NetworkGraph = ({ team }) => {
       // 포지션 정보가 있을 때
       createPositionedLayout(svg, team, positions, relationships, members, width, height);
     }
-  }, [team]);
+  }, [team, colorMode]);
 
   const parseNodePositions = (nodePositionsString) => {
     try {
@@ -62,12 +80,22 @@ const NetworkGraph = ({ team }) => {
       const members = parseMembers(team.team_info?.members || '[]');
       const userMember = members.find(member => member.isUser === true);
       
+      // 사용자의 실제 아이디어 생성 여부 확인
+      let actuallyGenerated = false;
+      if (team.ideas && team.ideas.length > 0) {
+        actuallyGenerated = team.ideas.some(idea => {
+          const parsedIdea = typeof idea === 'string' ? JSON.parse(idea) : idea;
+          return parsedIdea.author === '나';
+        });
+      }
+      
       return {
         name: ownerInfo.name || '나',
         type: 'user',
         professional: ownerInfo.professional || 'Owner',
         isLeader: userMember?.isLeader || false,
-        roles: userMember?.roles || []
+        roles: userMember?.roles || [],
+        actuallyGenerated: actuallyGenerated
       };
     }
 
@@ -93,6 +121,52 @@ const NetworkGraph = ({ team }) => {
       isLeader: false,
       roles: []
     };
+  };
+
+  const getRoleBasedColor = (nodeInfo) => {
+    if (nodeInfo.type === 'user') {
+      const hasGeneration = nodeInfo.roles?.includes('아이디어 생성하기') || false;
+      const hasEvaluation = nodeInfo.roles?.includes('아이디어 평가하기') || false;
+      const hasFeedback = nodeInfo.roles?.includes('피드백하기') || false;
+      const actuallyGenerated = nodeInfo.actuallyGenerated || false;
+      
+      // 사용자인 경우 실제 생성 여부도 고려
+      const effectiveGeneration = hasGeneration && actuallyGenerated;
+      
+      // 생성(실제 생성함) + (평가 또는 피드백) = 보라색
+      if (effectiveGeneration && (hasEvaluation || hasFeedback)) {
+        return '#8A2BE2';
+      }
+      // 생성(실제 생성함)만 = 파란색
+      else if (effectiveGeneration) {
+        return '#0000FF';
+      }
+      // 평가 또는 피드백만, 또는 생성 역할 있지만 실제 생성 안함 = 빨간색
+      else if (hasEvaluation || hasFeedback || (hasGeneration && !actuallyGenerated)) {
+        return '#FF0000';
+      }
+      // 역할 없음 = 회색
+      else {
+        return '#95A5A6';
+      }
+    } else if (nodeInfo.type === 'agent') {
+      const hasGeneration = nodeInfo.roles?.includes('아이디어 생성하기') || false;
+      const hasEvaluation = nodeInfo.roles?.includes('아이디어 평가하기') || false;
+      const hasFeedback = nodeInfo.roles?.includes('피드백하기') || false;
+      
+      // 에이전트는 기존 로직 유지
+      if (hasGeneration && (hasEvaluation || hasFeedback)) {
+        return '#8A2BE2';
+      } else if (hasGeneration) {
+        return '#0000FF';
+      } else if (hasEvaluation || hasFeedback) {
+        return '#FF0000';
+      } else {
+        return '#95A5A6';
+      }
+    } else {
+      return '#95A5A6';
+    }
   };
 
   const createPositionedLayout = (svg, team, positions, relationships, members, width, height) => {
@@ -260,10 +334,23 @@ const NetworkGraph = ({ team }) => {
     // 노드 원
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('r', '25');
-    circle.setAttribute('class', `node-circle ${nodeInfo.type}`);
     
-    if (nodeInfo.isLeader) {
-      circle.classList.add('leader');
+    // 색상 모드에 따라 다른 색상 적용
+    if (colorMode === 'role') {
+      const roleColor = getRoleBasedColor(nodeInfo);
+      circle.setAttribute('fill', roleColor);
+      if (nodeInfo.isLeader) {
+        circle.setAttribute('stroke', '#FFD700');
+        circle.setAttribute('stroke-width', '3');
+      } else {
+        circle.setAttribute('stroke', 'black');
+        circle.setAttribute('stroke-width', '1');
+      }
+    } else {
+      circle.setAttribute('class', `node-circle ${nodeInfo.type}`);
+      if (nodeInfo.isLeader) {
+        circle.classList.add('leader');
+      }
     }
 
     nodeG.appendChild(circle);
@@ -273,7 +360,16 @@ const NetworkGraph = ({ team }) => {
     keyText.setAttribute('text-anchor', 'middle');
     keyText.setAttribute('dy', '0.35em');
     keyText.setAttribute('class', 'node-key');
-    keyText.textContent = nodeId;
+    
+    // 역할별 보기에서 사용자인 경우 "ME" 표시
+    if (colorMode === 'role' && nodeInfo.type === 'user') {
+      keyText.textContent = 'ME';
+      keyText.setAttribute('fill', 'white');
+      keyText.setAttribute('font-weight', 'bold');
+    } else {
+      keyText.textContent = nodeId;
+    }
+    
     nodeG.appendChild(keyText);
 
     // 이름 라벨
@@ -350,27 +446,6 @@ const NetworkGraph = ({ team }) => {
     }
   };
 
-  useEffect(() => {
-    // 화살표 마커 정의
-    if (svgRef.current) {
-      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-      marker.setAttribute('id', 'arrowhead');
-      marker.setAttribute('markerWidth', '10');
-      marker.setAttribute('markerHeight', '7');
-      marker.setAttribute('refX', '9');
-      marker.setAttribute('refY', '3.5');
-      marker.setAttribute('orient', 'auto');
-      
-      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-      polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
-      polygon.setAttribute('fill', '#4a5568');
-      
-      marker.appendChild(polygon);
-      defs.appendChild(marker);
-      svgRef.current.insertBefore(defs, svgRef.current.firstChild);
-    }
-  }, []);
 
   return (
     <div className="network-graph-container">

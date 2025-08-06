@@ -1645,3 +1645,46 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Network Controls */
+.network-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.network-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.network-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.color-mode-btn {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-mode-btn:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.color-mode-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}

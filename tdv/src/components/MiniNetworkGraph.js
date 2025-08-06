@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './MiniNetworkGraph.css';
 
-const MiniNetworkGraph = ({ team }) => {
+const MiniNetworkGraph = ({ team, colorMode = 'default' }) => {
   const svgRef = useRef();
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const MiniNetworkGraph = ({ team }) => {
       // 포지션 정보가 있을 때
       createPositionedMiniLayout(svg, team, positions, relationships, width, height);
     }
-  }, [team]);
+  }, [team, colorMode]);
 
   const parseNodePositions = (nodePositionsString) => {
     try {
