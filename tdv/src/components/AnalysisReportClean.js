@@ -52,6 +52,21 @@ const AnalysisReportClean = ({ teams }) => {
     const totalRoleStats = { team1: [], team2: [], team3: [], total: [] };
     const sharedMentalModelStats = { team1: [], team2: [], team3: [], total: [] };
     const sharedMentalModelDetails = { team1: [], team2: [], team3: [], total: [] };
+    
+    // 피드백/요청 역할 상세 분석 통계
+    const feedbackRoleAnalysis = {
+      hasRoleCount: 0,  // 피드백 역할을 가진 사용자 수
+      hasRoleAndDid: 0,  // 역할도 있고 실제로 피드백한 사용자 수
+      hasRoleButDidnt: 0,  // 역할은 있지만 피드백하지 않은 사용자 수
+      noRoleButDid: 0  // 역할은 없지만 피드백한 사용자 수
+    };
+    
+    const requestRoleAnalysis = {
+      hasRoleCount: 0,  // 요청 역할을 가진 사용자 수
+      hasRoleAndDid: 0,  // 역할도 있고 실제로 요청한 사용자 수
+      hasRoleButDidnt: 0,  // 역할은 있지만 요청하지 않은 사용자 수
+      noRoleButDid: 0  // 역할은 없지만 요청한 사용자 수
+    };
     // 공유 멘탈 모델 길이 계산 함수 (syllable 기준)
     const countSyllables = (text) => {
       if (!text || typeof text !== 'string') return 0;
@@ -369,19 +384,49 @@ const AnalysisReportClean = ({ teams }) => {
         let userFeedbackCount = 0;
         if (team.chat) {
           for (const chatItem of team.chat) {
-            if (chatItem.author === '나' && chatItem.content && chatItem.content.includes('피드백')) {
-              userFeedbackCount++;
+            try {
+              let messageData;
+              if (typeof chatItem === 'string') {
+                messageData = JSON.parse(chatItem);
+              } else {
+                messageData = chatItem;
+              }
+              
+              // 사용자가 보낸 피드백 관련 메시지 카운트
+              // feedback_session_summary는 system이 보내므로, 다른 방식으로 체크
+              // 피드백을 수행한 경우: sender가 '나'이고 type이 feedback 관련이거나 content에 피드백이 포함된 경우
+              if (messageData.sender === '나' && 
+                  (messageData.type === 'feedback' || 
+                   messageData.type === 'give_feedback' ||
+                   (messageData.payload?.content && messageData.payload.content.includes('피드백')))) {
+                userFeedbackCount++;
+              }
+            } catch (e) {
+              // 파싱 오류 무시
             }
           }
         }
         
         // 사용자가 수행한 요청 수  
         let userRequestCount = 0;
+        
         if (team.chat) {
           for (const chatItem of team.chat) {
-            if (chatItem.author === '나' && chatItem.content && 
-                (chatItem.content.includes('요청') || chatItem.content.includes('부탁') || chatItem.content.includes('해주세요'))) {
-              userRequestCount++;
+            try {
+              let messageData;
+              if (typeof chatItem === 'string') {
+                messageData = JSON.parse(chatItem);
+              } else {
+                messageData = chatItem;
+              }
+              
+              // 사용자가 보낸 make_request 타입 메시지 카운트
+              // sender가 '나'인 경우를 확인
+              if (messageData.type === 'make_request' && messageData.sender === '나') {
+                userRequestCount++;
+              }
+            } catch (e) {
+              // 파싱 오류 무시
             }
           }
         }
@@ -415,6 +460,30 @@ const AnalysisReportClean = ({ teams }) => {
         }
         if (hasRequestRole && userRequestCount > 0) {
           userPerAgentRequestStats.total.push(userRequestCount);
+        }
+        
+        // 피드백 역할 상세 분석
+        if (hasFeedbackRole) {
+          feedbackRoleAnalysis.hasRoleCount++;
+          if (userFeedbackCount > 0) {
+            feedbackRoleAnalysis.hasRoleAndDid++;
+          } else {
+            feedbackRoleAnalysis.hasRoleButDidnt++;
+          }
+        } else if (userFeedbackCount > 0) {
+          feedbackRoleAnalysis.noRoleButDid++;
+        }
+        
+        // 요청 역할 상세 분석
+        if (hasRequestRole) {
+          requestRoleAnalysis.hasRoleCount++;
+          if (userRequestCount > 0) {
+            requestRoleAnalysis.hasRoleAndDid++;
+          } else {
+            requestRoleAnalysis.hasRoleButDidnt++;
+          }
+        } else if (userRequestCount > 0) {
+          requestRoleAnalysis.noRoleButDid++;
         }
         
         chatStats.total.push(chatCount);
@@ -641,45 +710,46 @@ const AnalysisReportClean = ({ teams }) => {
           request: { total: 0, byAgent: {} }
         };
         
-        // evaluations 데이터에서 실제 평가/피드백/요청 횟수 계산
-        if (team.evaluations && Array.isArray(team.evaluations)) {
-          team.evaluations.forEach(evaluation => {
+        // chat 데이터에서 실제 평가/피드백/요청 횟수 계산
+        if (team.chat && Array.isArray(team.chat)) {
+          team.chat.forEach(chatMessage => {
             try {
-              let evalData;
-              if (typeof evaluation === 'string') {
-                evalData = JSON.parse(evaluation);
+              let messageData;
+              if (typeof chatMessage === 'string') {
+                messageData = JSON.parse(chatMessage);
               } else {
-                evalData = evaluation;
+                messageData = chatMessage;
               }
               
-              const authorId = evalData.author;
-              const actionType = evalData.action || evalData.type;
+              const sender = messageData.sender;
+              const messageType = messageData.type;
+              const content = messageData.payload?.content || '';
               
-              // 평가 행동 카운트
-              if (actionType === 'evaluate' || actionType === '평가') {
+              // 평가 행동 카운트 - system 타입이고 "평가했습니다" 포함
+              if (messageType === 'system' && content.includes('평가했습니다')) {
                 actualPerformances.evaluation.total++;
-                if (!actualPerformances.evaluation.byAgent[authorId]) {
-                  actualPerformances.evaluation.byAgent[authorId] = 0;
+                if (!actualPerformances.evaluation.byAgent[sender]) {
+                  actualPerformances.evaluation.byAgent[sender] = 0;
                 }
-                actualPerformances.evaluation.byAgent[authorId]++;
+                actualPerformances.evaluation.byAgent[sender]++;
               }
               
-              // 피드백 행동 카운트
-              if (actionType === 'feedback' || actionType === '피드백') {
+              // 피드백 행동 카운트 - feedback_session_summary 타입
+              if (messageType === 'feedback_session_summary') {
                 actualPerformances.feedback.total++;
-                if (!actualPerformances.feedback.byAgent[authorId]) {
-                  actualPerformances.feedback.byAgent[authorId] = 0;
+                if (!actualPerformances.feedback.byAgent[sender]) {
+                  actualPerformances.feedback.byAgent[sender] = 0;
                 }
-                actualPerformances.feedback.byAgent[authorId]++;
+                actualPerformances.feedback.byAgent[sender]++;
               }
               
-              // 요청 행동 카운트
-              if (actionType === 'request' || actionType === '요청') {
+              // 요청 행동 카운트 - make_request 타입
+              if (messageType === 'make_request') {
                 actualPerformances.request.total++;
-                if (!actualPerformances.request.byAgent[authorId]) {
-                  actualPerformances.request.byAgent[authorId] = 0;
+                if (!actualPerformances.request.byAgent[sender]) {
+                  actualPerformances.request.byAgent[sender] = 0;
                 }
-                actualPerformances.request.byAgent[authorId]++;
+                actualPerformances.request.byAgent[sender]++;
               }
             } catch (e) {
               // 파싱 오류 시 무시
@@ -1015,6 +1085,8 @@ const AnalysisReportClean = ({ teams }) => {
       sharedMentalModel: calculateMentalModelStatsForAllTeams(sharedMentalModelStats, sharedMentalModelDetails),
       rolePercentages,
       roleDistribution,
+      feedbackRoleAnalysis,
+      requestRoleAnalysis,
       roleAssignmentRates: {
         ...roleAssignmentRates,
         team1: {
@@ -1927,17 +1999,21 @@ const AnalysisReportClean = ({ teams }) => {
                 <summary>🔍 상세 피드백 역할 분석 보기</summary>
                 <div className="user-role-analysis">
                   <div className="role-summary">
-                    <p><strong>피드백 역할을 맡은 팀:</strong> 분석 중...</p>
+                    <p><strong>피드백 역할을 맡은 팀:</strong> {analysisData.feedbackRoleAnalysis.hasRoleCount}개 팀</p>
                     <div className="role-breakdown">
-                      <div className="role-stat">✅ 역할도 있고 실제로도 피드백: 분석 중</div>
-                      <div className="role-stat">❌ 역할은 있지만 피드백하지 않음: 분석 중</div>
-                      <div className="role-stat">📊 역할은 없지만 피드백함: 분석 중</div>
+                      <div className="role-stat">✅ 역할도 있고 실제로도 피드백: {analysisData.feedbackRoleAnalysis.hasRoleAndDid}개 팀</div>
+                      <div className="role-stat">❌ 역할은 있지만 피드백하지 않음: {analysisData.feedbackRoleAnalysis.hasRoleButDidnt}개 팀</div>
+                      <div className="role-stat">📊 역할은 없지만 피드백함: {analysisData.feedbackRoleAnalysis.noRoleButDid}개 팀</div>
                     </div>
                   </div>
                   
                   <div className="role-details">
                     <h5>사용자 피드백 활동 상세 분석</h5>
-                    <p>현재 피드백 데이터를 분석하여 상세한 역할별 통계를 준비 중입니다.</p>
+                    <p>
+                      전체 {analysisData.feedbackRoleAnalysis.hasRoleCount}개 팀 중 {analysisData.feedbackRoleAnalysis.hasRoleAndDid}개 팀
+                      ({((analysisData.feedbackRoleAnalysis.hasRoleAndDid / Math.max(analysisData.feedbackRoleAnalysis.hasRoleCount, 1)) * 100).toFixed(1)}%)에서 
+                      사용자가 피드백 역할을 맡고 실제로 피드백을 수행했습니다.
+                    </p>
                   </div>
                 </div>
               </details>
@@ -2077,17 +2153,21 @@ const AnalysisReportClean = ({ teams }) => {
                 <summary>🔍 상세 요청 역할 분석 보기</summary>
                 <div className="user-role-analysis">
                   <div className="role-summary">
-                    <p><strong>요청 역할을 맡은 팀:</strong> 분석 중...</p>
+                    <p><strong>요청 역할을 맡은 팀:</strong> {analysisData.requestRoleAnalysis.hasRoleCount}개 팀</p>
                     <div className="role-breakdown">
-                      <div className="role-stat">✅ 역할도 있고 실제로도 요청: 분석 중</div>
-                      <div className="role-stat">❌ 역할은 있지만 요청하지 않음: 분석 중</div>
-                      <div className="role-stat">📊 역할은 없지만 요청함: 분석 중</div>
+                      <div className="role-stat">✅ 역할도 있고 실제로도 요청: {analysisData.requestRoleAnalysis.hasRoleAndDid}개 팀</div>
+                      <div className="role-stat">❌ 역할은 있지만 요청하지 않음: {analysisData.requestRoleAnalysis.hasRoleButDidnt}개 팀</div>
+                      <div className="role-stat">📊 역할은 없지만 요청함: {analysisData.requestRoleAnalysis.noRoleButDid}개 팀</div>
                     </div>
                   </div>
                   
                   <div className="role-details">
                     <h5>사용자 요청 활동 상세 분석</h5>
-                    <p>현재 요청 데이터를 분석하여 상세한 역할별 통계를 준비 중입니다.</p>
+                    <p>
+                      전체 {analysisData.requestRoleAnalysis.hasRoleCount}개 팀 중 {analysisData.requestRoleAnalysis.hasRoleAndDid}개 팀
+                      ({((analysisData.requestRoleAnalysis.hasRoleAndDid / Math.max(analysisData.requestRoleAnalysis.hasRoleCount, 1)) * 100).toFixed(1)}%)에서 
+                      사용자가 요청 역할을 맡고 실제로 요청을 수행했습니다.
+                    </p>
                   </div>
                 </div>
               </details>
