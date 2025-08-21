@@ -450,7 +450,7 @@ const AnalysisReportClean = ({ teams }) => {
         }
 
         // 사용자 역할 분석
-        const members = JSON.parse(team.team_info?.members || '[]');
+        const teamMembers = JSON.parse(team.team_info?.members || '[]');
         const allMemberRoleCounts = [];
         const agentRoleCounts = [];
         const userRoleCounts = [];
@@ -461,7 +461,7 @@ const AnalysisReportClean = ({ teams }) => {
           agents: { generation: 0, evaluation: 0, feedback: 0, request: 0 },
           users: { generation: 0, evaluation: 0, feedback: 0, request: 0 }
         };
-        let totalMemberCount = members.length;
+        let totalMemberCount = teamMembers.length;
         let agentMemberCountForAssignment = 0;
         let userMemberCount = 0;
 
@@ -469,7 +469,7 @@ const AnalysisReportClean = ({ teams }) => {
         let hasLeader = false;
         let leaderType = ''; // 'user' or 'ai'
         
-        members.forEach(member => {
+        teamMembers.forEach(member => {
           const roles = member.roles || [];
           allMemberRoleCounts.push(roles.length);
           
@@ -539,14 +539,14 @@ const AnalysisReportClean = ({ teams }) => {
         }
         
         // 역할 분포 계산 (전체, 에이전트만, 사용자만)
-        const allRoles = members.flatMap(member => member.roles || []);
-        const agentRoles = members.filter(member => !member.isUser).flatMap(member => member.roles || []);
-        const userRoles = members.filter(member => member.isUser).flatMap(member => member.roles || []);
+        const allRoles = teamMembers.flatMap(member => member.roles || []);
+        const agentRoles = teamMembers.filter(member => !member.isUser).flatMap(member => member.roles || []);
+        const userRolesList = teamMembers.filter(member => member.isUser).flatMap(member => member.roles || []);
         
         const currentRoleDistribution = {
           total: { generation: 0, evaluation: 0, feedback: 0, request: 0, total: allRoles.length },
           agents: { generation: 0, evaluation: 0, feedback: 0, request: 0, total: agentRoles.length },
-          users: { generation: 0, evaluation: 0, feedback: 0, request: 0, total: userRoles.length }
+          users: { generation: 0, evaluation: 0, feedback: 0, request: 0, total: userRolesList.length }
         };
         
         // 전체 역할 분포 계산
@@ -566,7 +566,7 @@ const AnalysisReportClean = ({ teams }) => {
         });
         
         // 사용자 역할 분포 계산
-        userRoles.forEach(role => {
+        userRolesList.forEach(role => {
           if (role === '아이디어 생성하기') currentRoleDistribution.users.generation++;
           if (role === '아이디어 평가하기') currentRoleDistribution.users.evaluation++;
           if (role === '피드백하기') currentRoleDistribution.users.feedback++;
