@@ -1,0 +1,1493 @@
+/* AnalysisReport.css */
+.analysis-report {
+  animation: fadeIn 0.3s ease;
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.report-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.report-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #718096;
+  font-style: italic;
+}
+
+.analysis-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.tab-button {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-button:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e0;
+}
+
+.tab-button.active {
+  background: #3182ce;
+  border-color: #3182ce;
+  color: white;
+}
+
+.analysis-content {
+  margin-top: 2rem;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.analysis-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+  transition: all 0.2s ease;
+}
+
+.analysis-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.analysis-section h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team-stats-table {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stats-header {
+  display: grid;
+  grid-template-columns: 1fr repeat(4, 0.8fr);
+  background: #f8f9fa;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr repeat(4, 0.8fr);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stats-row:last-child {
+  border-bottom: none;
+}
+
+.total-row {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.stat-label {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 600;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+}
+
+.stats-header .stat-label {
+  background: #e2e8f0;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.stat-value {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+  text-align: center;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-header .stat-value {
+  background: #e2e8f0;
+  font-weight: 700;
+}
+
+.stats-row .stat-value {
+  background: white;
+}
+
+.total-row .stat-value {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.stats-row:last-child .stat-label,
+.stats-row:last-child .stat-value {
+  border-right-color: #e2e8f0;
+}
+
+.stat-label:last-child,
+.stat-value:last-child {
+  border-right: none;
+}
+
+
+.no-data {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #718096;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* User idea summary styles */
+.user-idea-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-stats p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.user-ideas-detail {
+  margin-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.user-ideas-detail h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.ideas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.idea-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.idea-item:hover {
+  border-color: #cbd5e0;
+  transform: translateX(4px);
+}
+
+.idea-owner {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.idea-content {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.idea-content li {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+.idea-content li:last-child {
+  margin-bottom: 0;
+}
+
+.idea-content strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+/* Idea generation summary styles */
+.idea-generation-summary {
+  background: #f0f8ff;
+  border: 1px solid #bde5f8;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.idea-generation-summary p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #2c5aa0;
+}
+
+.idea-generation-summary p:first-child {
+  margin-top: 0;
+}
+
+.idea-generation-summary p:last-child {
+  margin-bottom: 0;
+}
+
+/* User role analysis styles */
+.user-role-analysis {
+  margin-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.user-role-analysis h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.role-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.role-summary p {
+  margin: 0 0 0.8rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.role-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.role-stat {
+  font-size: 0.9rem;
+  color: #4a5568;
+  padding: 0.3rem 0;
+}
+
+.role-details h5 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.role-teams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.role-team-item {
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.role-team-item.success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.role-team-item.warning {
+  background: #fffbeb;
+  border: 1px solid #fed7aa;
+}
+
+.team-header {
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.role-team-item.success .team-header {
+  color: #166534;
+}
+
+.role-team-item.warning .team-header {
+  color: #92400e;
+}
+
+.team-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.team-list li {
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.role-team-item.success .team-list li {
+  color: #15803d;
+}
+
+.role-team-item.warning .team-list li {
+  color: #a16207;
+}
+
+.team-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Role assignment analysis styles */
+.role-assignment-analysis {
+  margin-top: 1rem;
+}
+
+.role-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.role-stats-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Role distribution analysis styles */
+.role-distribution-analysis {
+  margin-top: 1rem;
+}
+
+.role-percentages-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.role-percentage-item h4,
+.role-percentage-details h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Role bar chart styles */
+.role-chart {
+  margin-top: 1rem;
+}
+
+.role-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.role-bar-item {
+  display: grid;
+  grid-template-columns: 150px 1fr 60px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-bar-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.role-bar {
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.role-bar-fill {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.3s ease;
+}
+
+.role-bar-fill.generation {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+
+.role-bar-fill.evaluation {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+.role-bar-fill.feedback {
+  background: linear-gradient(90deg, #f472b6, #ec4899);
+}
+
+.role-bar-fill.request {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.role-bar-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: right;
+}
+
+/* Team role comparison styles */
+.team-role-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.team-role-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.team-role-label {
+  min-width: 100px;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.team-role-values {
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+@media (max-width: 768px) {
+  .report-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .analysis-section {
+    padding: 1rem;
+  }
+  
+  .stats-header,
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-label,
+  .stat-value {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    justify-content: flex-start;
+  }
+  
+  .stats-header .stat-value {
+    text-align: center;
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+
+  .user-idea-summary {
+    padding: 0.8rem;
+  }
+  
+  .summary-stats p {
+    font-size: 0.85rem;
+  }
+  
+  .idea-item {
+    padding: 0.8rem;
+  }
+  
+  .idea-content {
+    padding-left: 1rem;
+  }
+  
+  .idea-content li {
+    font-size: 0.85rem;
+  }
+
+  .role-breakdown {
+    gap: 0.3rem;
+  }
+  
+  .role-stat {
+    font-size: 0.85rem;
+  }
+  
+  .role-teams-list {
+    gap: 0.8rem;
+  }
+  
+  .role-team-item {
+    padding: 0.8rem;
+  }
+  
+  .team-header {
+    font-size: 0.9rem;
+  }
+  
+  .team-list {
+    padding-left: 1rem;
+  }
+  
+  .team-list li {
+    font-size: 0.85rem;
+  }
+
+  .role-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .role-stats-section h4 {
+    font-size: 1rem;
+  }
+  
+  .role-percentages-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .role-bar-item {
+    grid-template-columns: 120px 1fr 50px;
+    gap: 0.8rem;
+  }
+  
+  .role-bar-label {
+    font-size: 0.8rem;
+  }
+  
+  .role-bar-value {
+    font-size: 0.8rem;
+  }
+  
+  .team-role-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .team-role-label {
+    min-width: auto;
+  }
+}
+
+/* Stacked role charts styles - 시간차 비교를 위한 세로 레이아웃 */
+.role-stacked-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.stacked-chart-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: white;
+}
+
+.stacked-chart-group h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.stacked-chart-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stacked-chart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stacked-chart-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.3rem;
+}
+
+.stacked-bar {
+  height: 32px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+.stacked-segment {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  min-width: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.stacked-segment:hover {
+  filter: brightness(1.1);
+  transform: scaleY(1.05);
+}
+
+.stacked-segment.generation {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+
+.stacked-segment.evaluation {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+.stacked-segment.feedback {
+  background: linear-gradient(90deg, #f472b6, #ec4899);
+}
+
+.stacked-segment.request {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.stacked-segment-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.stacked-segment:hover .stacked-segment-tooltip {
+  opacity: 1;
+}
+
+.role-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-color.generation {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+
+.legend-color.evaluation {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+.legend-color.feedback {
+  background: linear-gradient(90deg, #f472b6, #ec4899);
+}
+
+.legend-color.request {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+/* Role assignment rates styles */
+.role-assignment-rates {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background: #f8fafc;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.role-assignment-rates small {
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 1024px) {
+  .role-stacked-charts {
+    gap: 1.5rem;
+  }
+  
+  .role-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stacked-chart-group {
+    padding: 1rem;
+  }
+  
+  .stacked-chart-group h4 {
+    font-size: 1rem;
+  }
+  
+  .stacked-bar {
+    height: 28px;
+  }
+  
+  .stacked-segment {
+    font-size: 0.7rem;
+  }
+  
+  .role-legend {
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  .legend-item {
+    font-size: 0.8rem;
+  }
+  
+  .legend-color {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .role-assignment-rates {
+    margin-top: 0.3rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .role-assignment-rates small {
+    font-size: 0.7rem;
+  }
+}
+
+/* Team structure analysis styles */
+.structure-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.structure-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.structure-type {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: #f8fafc;
+}
+
+.structure-type.flat {
+  border-left: 4px solid #10b981;
+}
+
+.structure-type.simple {
+  border-left: 4px solid #3b82f6;
+}
+
+.structure-type.complex {
+  border-left: 4px solid #8b5cf6;
+}
+
+.structure-type h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.structure-stats {
+  margin-bottom: 1rem;
+}
+
+.structure-stats p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.satisfaction-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.satisfaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.satisfaction-item:last-child {
+  border-bottom: none;
+}
+
+.field-name {
+  font-size: 0.8rem;
+  color: #6b7280;
+  flex: 1;
+}
+
+.satisfaction-rate {
+  font-weight: 600;
+  color: #059669;
+  font-size: 0.9rem;
+}
+
+.team-list {
+  margin-top: 1rem;
+}
+
+.team-tag {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.25rem 0.5rem;
+  margin: 0.2rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.structure-insights {
+  background: #fef7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.structure-insights h4 {
+  margin: 0 0 1rem 0;
+  color: #9a3412;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.insights-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.insight-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.insight-item strong {
+  color: #ea580c;
+  font-size: 0.95rem;
+}
+
+.insight-item span {
+  color: #7c2d12;
+  font-size: 0.9rem;
+  padding-left: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .structure-overview {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .structure-type {
+    padding: 1rem;
+  }
+  
+  .structure-insights {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .structure-analysis {
+    gap: 1rem;
+  }
+  
+  .structure-type h4 {
+    font-size: 1rem;
+  }
+  
+  .structure-stats p {
+    font-size: 0.85rem;
+  }
+  
+  .team-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .insight-item {
+    gap: 0.3rem;
+  }
+  
+  .insight-item strong {
+    font-size: 0.9rem;
+  }
+  
+  .insight-item span {
+    font-size: 0.85rem;
+    padding-left: 0.5rem;
+  }
+}
+
+/* 팀별 구조 유형 빈도수 표 */
+.team-structure-frequency {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.team-structure-frequency h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.frequency-table {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.frequency-header {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  background: #edf2f7;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.frequency-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.frequency-row:last-child {
+  border-bottom: none;
+}
+
+.freq-label {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  background: #f7fafc;
+  border-right: 1px solid #e2e8f0;
+}
+
+.frequency-header .freq-label {
+  background: #e2e8f0;
+  font-weight: 700;
+}
+
+.freq-value {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  color: #4a5568;
+  border-right: 1px solid #e2e8f0;
+}
+
+.freq-value:last-child {
+  border-right: none;
+}
+
+.frequency-header .freq-value {
+  font-weight: 700;
+  color: #2d3748;
+  background: #e2e8f0;
+}
+
+/* 공유 멘탈 모델 탭 스타일 */
+.mental-model-tab {
+  gap: 2rem;
+}
+
+.mental-model-stats {
+  margin: 1.5rem 0;
+}
+
+.mental-model-insights {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.mental-model-insights h4 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.insight-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.insight-card h5 {
+  margin: 0 0 0.75rem 0;
+  color: #2d3748;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.insight-card p {
+  margin: 0;
+  line-height: 1.6;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.analysis-description {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #3182ce;
+}
+
+/* 참가자별 멘탈 모델 변경 분석 스타일 */
+.participant-changes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.participant-change-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.participant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f7fafc;
+}
+
+.participant-header h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.participant-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 400;
+  margin-left: 0.5rem;
+}
+
+.significant-changes-badge {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mental-model-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.change-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.change-item.identical {
+  border-color: #d1fae5;
+  background: #f0fdf4;
+}
+
+.change-item.minor {
+  border-color: #fed7aa;
+  background: #fffbeb;
+}
+
+.change-item.significant {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.change-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.team-transition {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.change-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.change-item.identical .change-status {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.change-item.minor .change-status {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.change-item.significant .change-status {
+  background: #fecaca;
+  color: #b91c1c;
+}
+
+.similarity-score {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.length-change {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.model-diff {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+.model-section {
+  margin-bottom: 0.75rem;
+}
+
+.model-section strong {
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.model-text {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prev-model {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  color: #742a2a;
+}
+
+.curr-model {
+  background: #f0fff4;
+  border: 1px solid #c6f6d5;
+  color: #22543d;
+}
+
+.change-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.change-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.summary-item strong {
+  color: #2d3748;
+}
+
+/* 팀 정보 표시 스타일 */
+.team-info {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* 리더십 분석 스타일 */
+.leadership-stats {
+  margin: 1.5rem 0;
+}
+
+.leadership-insights {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.leadership-insights h4 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Role Performance Grid Styles */
+.role-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .role-performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.role-performance-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.role-performance-section h4 {
+  color: #1e40af;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.team-stats-table.compact {
+  font-size: 0.9rem;
+}
+
+.team-stats-table.compact .stats-header {
+  background: #1e40af;
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.team-stats-table.compact .stats-row {
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+.team-stats-table.compact .stat-label,
+.team-stats-table.compact .stat-value {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.team-stats-table.compact .stats-header .stat-label,
+.team-stats-table.compact .stats-header .stat-value {
+  border-color: #1d4ed8;
+}
+
+.team-stats-table.compact .stats-row .stat-value {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* Role Analysis Layout Styles */
+.role-analysis-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .role-analysis-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.role-stats-section,
+.role-performance-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.role-stats-section h4,
+.role-performance-section h4 {
+  color: #1e40af;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}

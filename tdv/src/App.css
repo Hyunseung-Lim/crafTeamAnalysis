@@ -38,6 +38,81 @@
   margin-top: 2rem;
 }
 
+.control-panel {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  align-items: flex-start;
+}
+
+.filter-section {
+  flex: 1;
+  max-width: 800px;
+}
+
+.report-section {
+  flex-shrink: 0;
+}
+
+.report-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  white-space: nowrap;
+}
+
+.report-btn:hover {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.report-btn:active {
+  transform: translateY(0);
+}
+
+.report-view {
+  animation: fadeIn 0.3s ease;
+}
+
+.back-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 2px solid #dee2e6;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #212529;
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 768px) {
   .teams-grid {
     grid-template-columns: 1fr;
@@ -54,5 +129,15 @@
   
   .app-header h1 {
     font-size: 2rem;
+  }
+  
+  .control-panel {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .report-btn {
+    width: 100%;
+    text-align: center;
   }
 }

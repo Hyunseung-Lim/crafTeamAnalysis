@@ -93,6 +93,10 @@ def analyze_redis_data():
                 elif 'ownerID' in team_info:
                     owner_info = get_user_info(data, team_info['ownerID'])
                 
+                # 임현승 데이터 필터링
+                if owner_info and owner_info.get('name') == '임현승':
+                    continue
+                
                 # 팀 기본 정보 저장
                 teams[team_id] = {
                     'team_info': team_info,

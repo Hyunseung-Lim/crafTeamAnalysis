@@ -4,11 +4,13 @@ import TeamsData from './structured_teams.json';
 import TeamCard from './components/TeamCard';
 import TeamDetail from './components/TeamDetail';
 import FilterPanel from './components/FilterPanel';
+import AnalysisReportClean from './components/AnalysisReportClean';
 
 function App() {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [filteredTeams, setFilteredTeams] = useState([]);
+  const [currentView, setCurrentView] = useState('teams'); // 'teams' or 'report'
   const [filters, setFilters] = useState({
     participant: ''
   });
@@ -75,13 +77,25 @@ function App() {
       </header>
       
       <div className="app-content">
-        {!selectedTeam ? (
+        {currentView === 'teams' && !selectedTeam && (
           <>
-            <FilterPanel 
-              filters={filters} 
-              setFilters={setFilters} 
-              availableParticipants={availableParticipants}
-            />
+            <div className="control-panel">
+              <div className="filter-section">
+                <FilterPanel 
+                  filters={filters} 
+                  setFilters={setFilters} 
+                  availableParticipants={availableParticipants}
+                />
+              </div>
+              <div className="report-section">
+                <button 
+                  className="report-btn"
+                  onClick={() => setCurrentView('report')}
+                >
+                  📊 분석 리포트 보기
+                </button>
+              </div>
+            </div>
             <div className="teams-grid">
               {filteredTeams.map((team) => (
                 <TeamCard 
@@ -92,11 +106,25 @@ function App() {
               ))}
             </div>
           </>
-        ) : (
+        )}
+        
+        {currentView === 'teams' && selectedTeam && (
           <TeamDetail 
             team={selectedTeam} 
             onBack={() => setSelectedTeam(null)} 
           />
+        )}
+        
+        {currentView === 'report' && (
+          <div className="report-view">
+            <button 
+              className="back-btn"
+              onClick={() => setCurrentView('teams')}
+            >
+              ← 팀 목록으로 돌아가기
+            </button>
+            <AnalysisReportClean teams={teams} />
+          </div>
         )}
       </div>
     </div>
