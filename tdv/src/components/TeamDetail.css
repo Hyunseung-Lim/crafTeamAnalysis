@@ -17,21 +17,23 @@
 }
 
 .back-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid #343a40;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  border-color: #212529;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
 .team-detail-header h1 {

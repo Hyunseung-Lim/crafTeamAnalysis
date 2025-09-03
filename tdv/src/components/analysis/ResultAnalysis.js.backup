@@ -1,0 +1,2456 @@
+import React, { useState } from 'react';
+import ActivityStatsDisplay from '../common/ActivityStatsDisplay';
+import { calculateTeamActivityStats, generateStatsSummary } from '../../utils/teamDataCalculator';
+
+const ResultAnalysis = ({ teams, analysisData }) => {
+  const [activeResultTab, setActiveResultTab] = useState('generation');
+  
+  if (!teams || teams.length === 0 || !analysisData) {
+    return <div>데이터를 로딩 중입니다...</div>;
+  }
+
+  // 팀 사이클별로 데이터 분리 (owner별로 구분)
+  const getTeamsByOwner = () => {
+    const teamsByOwner = {};
+    
+    teams.forEach((team, index) => {
+      const ownerId = team.owner_info?.id || team.team_info?.ownerId || `unknown_${index}`;
+      
+      if (!teamsByOwner[ownerId]) {
+        teamsByOwner[ownerId] = [];
+      }
+      teamsByOwner[ownerId].push(team);
+    });
+    
+    // 각 owner별로 팀을 생성 시간순으로 정렬
+    Object.keys(teamsByOwner).forEach(ownerId => {
+      teamsByOwner[ownerId].sort((a, b) => {
+        const timeA = new Date(a.team_info?.createdAt || 0);
+        const timeB = new Date(b.team_info?.createdAt || 0);
+        return timeA - timeB;
+      });
+    });
+    
+    return teamsByOwner;
+  };
+
+  // 사이클별로 팀 분리 (각 사용자의 1번째, 2번째, 3번째 팀)
+  const getTeamsByPhase = (phase) => {
+    const teamsByOwner = getTeamsByOwner();
+    const phaseTeams = [];
+    
+    Object.values(teamsByOwner).forEach(ownerTeams => {
+      if (ownerTeams[phase - 1]) { // phase는 1,2,3이므로 배열 인덱스는 0,1,2
+        phaseTeams.push(ownerTeams[phase - 1]);
+      }
+    });
+    
+    return phaseTeams;
+  };
+
+  const team1Data = getTeamsByPhase(1);
+  const team2Data = getTeamsByPhase(2);
+  const team3Data = getTeamsByPhase(3);
+
+  // 통계 계산 함수
+  const calculateStats = (values) => {
+    if (values.length === 0) return { avg: 0, min: 0, max: 0, stdev: 0 };
+    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
+    const stdev = parseFloat(Math.sqrt(variance).toFixed(2));
+    return {
+      avg: parseFloat(avg.toFixed(2)),
+      min,
+      max,
+      stdev: parseFloat(stdev.toFixed(2))
+    };
+  };
+
+  // 각 팀의 아이디어 개수 계산
+  const getIdeaCounts = (teamData) => {
+    return teamData.map(team => {
+      const ideas = team.ideas || [];
+      return ideas.length;
+    });
+  };
+
+  // 아이디어 속성별 길이 계산
+  const getIdeaAttributeLengths = (teamData, attribute) => {
+    const lengths = [];
+    
+    teamData.forEach(team => {
+      const ideas = team.ideas || [];
+      ideas.forEach(ideaStr => {
+        try {
+          // ideas 배열의 각 항목은 JSON 문자열로 저장되어 있음
+          const idea = typeof ideaStr === 'string' ? JSON.parse(ideaStr) : ideaStr;
+          let content = idea.content?.[attribute];
+          
+          if (content && typeof content === 'string') {
+            // behavior와 structure는 JSON 문자열로 저장되어 있어서 실제 내용만 추출
+            if (attribute === 'behavior' || attribute === 'structure') {
+              try {
+                const parsedContent = JSON.parse(content);
+                // JSON 객체의 모든 값들을 추출하여 하나의 문자열로 합침
+                const extractValues = (obj) => {
+                  let values = [];
+                  for (const key in obj) {
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
+                      values = values.concat(extractValues(obj[key]));
+                    } else if (typeof obj[key] === 'string') {
+                      values.push(obj[key]);
+                    }
+                  }
+                  return values;
+                };
+                const allValues = extractValues(parsedContent);
+                content = allValues.join(' '); // 모든 값들을 공백으로 연결
+              } catch (jsonError) {
+                // JSON 파싱 실패 시 원본 문자열 사용
+                console.warn('Failed to parse JSON content:', content, jsonError);
+              }
+            }
+            
+            // 한글 음절 개수 계산 (한글: 1음절, 영어/숫자: 0.5음절로 계산)
+            const koreanLength = (content.match(/[가-힣]/g) || []).length;
+            const otherLength = (content.match(/[^\가-힣\s]/g) || []).length * 0.5;
+            lengths.push(Math.round(koreanLength + otherLength));
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 무시
+          console.warn('Failed to parse idea:', ideaStr, e);
+        }
+      });
+    });
+    
+    return lengths;
+  };
+
+  // 각 사이클별 아이디어 개수 통계
+  const team1Ideas = getIdeaCounts(team1Data);
+  const team2Ideas = getIdeaCounts(team2Data);
+  const team3Ideas = getIdeaCounts(team3Data);
+  const totalIdeas = [...team1Ideas, ...team2Ideas, ...team3Ideas];
+
+  // 최소/최대 팀 정보 계산
+  const getMinMaxTeamInfo = (teamData, ideaCounts, cycleNum) => {
+    if (ideaCounts.length === 0) return { minTeam: null, maxTeam: null };
+    
+    const minCount = Math.min(...ideaCounts);
+    const maxCount = Math.max(...ideaCounts);
+    
+    const minIndex = ideaCounts.indexOf(minCount);
+    const maxIndex = ideaCounts.indexOf(maxCount);
+    
+    const getTeamLabel = (team, index) => {
+      const ownerName = team.owner_info?.name || team.team_info?.ownerId || 'Unknown';
+      const participantId = `P${Object.keys(getTeamsByOwner()).indexOf(team.owner_info?.id || team.team_info?.ownerId) + 1}`;
+      return `${participantId}T${cycleNum}`;
+    };
+    
+    return {
+      minTeam: teamData[minIndex] ? {
+        label: getTeamLabel(teamData[minIndex], minIndex),
+        count: minCount,
+        name: teamData[minIndex].team_info?.teamName || '이름 없음'
+      } : null,
+      maxTeam: teamData[maxIndex] ? {
+        label: getTeamLabel(teamData[maxIndex], maxIndex),
+        count: maxCount,
+        name: teamData[maxIndex].team_info?.teamName || '이름 없음'
+      } : null
+    };
+  };
+
+  const team1MinMax = getMinMaxTeamInfo(team1Data, team1Ideas, 1);
+  const team2MinMax = getMinMaxTeamInfo(team2Data, team2Ideas, 2);
+  const team3MinMax = getMinMaxTeamInfo(team3Data, team3Ideas, 3);
+
+  const ideaCountStats = {
+    team1: calculateStats(team1Ideas),
+    team2: calculateStats(team2Ideas),
+    team3: calculateStats(team3Ideas),
+    total: calculateStats(totalIdeas)
+  };
+
+  // 아이디어 속성별 길이 통계
+  const calculateAttributeStats = (attribute) => {
+    const team1Lengths = getIdeaAttributeLengths(team1Data, attribute);
+    const team2Lengths = getIdeaAttributeLengths(team2Data, attribute);
+    const team3Lengths = getIdeaAttributeLengths(team3Data, attribute);
+    const totalLengths = [...team1Lengths, ...team2Lengths, ...team3Lengths];
+
+    return {
+      team1: calculateStats(team1Lengths),
+      team2: calculateStats(team2Lengths),
+      team3: calculateStats(team3Lengths),
+      total: calculateStats(totalLengths)
+    };
+  };
+
+  const objectStats = calculateAttributeStats('object');
+  const functionStats = calculateAttributeStats('function');
+  const behaviorStats = calculateAttributeStats('behavior');
+  const structureStats = calculateAttributeStats('structure');
+
+  // 피드백 역할을 가진 참여자 수 계산 함수
+  const getFeedbackParticipantCounts = (teamData) => {
+    let totalUserFeedbackers = 0;
+    let totalAiFeedbackers = 0;
+    
+    teamData.forEach(team => {
+      try {
+        const members = JSON.parse(team.team_info?.members || '[]');
+        members.forEach(member => {
+          if (member.roles && member.roles.includes('피드백하기')) {
+            if (member.isUser) {
+              totalUserFeedbackers++;
+            } else {
+              totalAiFeedbackers++;
+            }
+          }
+        });
+      } catch (e) {
+        // JSON 파싱 실패 시 기본값 사용 (팀당 사용자 1명, AI 5명)
+        totalUserFeedbackers++;
+        totalAiFeedbackers += 5;
+      }
+    });
+    
+    return { totalUserFeedbackers, totalAiFeedbackers };
+  };
+
+  // 실제 피드백 데이터 분석 함수 (chat에서 feedback_session_summary, 양방향 카운팅)
+  const getFeedbackData = (teamData, cycleNum = 0) => {
+    const feedbackCounts = [];
+    const feedbackLengths = [];
+    
+    // 사용자 vs AI 피드백 분리 (양방향)
+    const userFeedbacks = [];
+    const aiFeedbacks = [];
+    
+    // 피드백 세션 개시자 분석
+    const userInitiatedSessions = [];
+    const aiInitiatedSessions = [];
+    
+    // 피드백 세션 턴 수 및 세션별 평균 음절 분석
+    const sessionTurns = [];
+    const sessionAverageSyllables = [];
+    
+    // 피드백 역할 참여자 수 계산
+    const { totalUserFeedbackers, totalAiFeedbackers } = getFeedbackParticipantCounts(teamData);
+    
+    // 개별 참여자별 피드백 개시 횟수 추적 (SD 계산용)
+    const userInitiationCounts = []; // 각 사용자가 개시한 피드백 수
+    const aiInitiationCounts = [];   // 각 AI가 개시한 피드백 수
+
+    teamData.forEach(team => {
+      let teamFeedbackCount = 0;
+      
+      if (team.chat) {
+        // 피드백 요청과 세션을 연결하기 위한 임시 저장소
+        const feedbackRequests = [];
+        const feedbackSessions = [];
+        
+        // 먼저 모든 채팅 아이템을 수집
+        team.chat.forEach(chatItem => {
+          try {
+            let messageData;
+            if (typeof chatItem === 'string') {
+              messageData = JSON.parse(chatItem);
+            } else {
+              messageData = chatItem;
+            }
+            
+            // 피드백 요청 수집
+            if (messageData.type === 'give_feedback' || 
+                (messageData.type === 'make_request' && messageData.payload?.requestType === 'give_feedback')) {
+              feedbackRequests.push({
+                timestamp: messageData.timestamp,
+                sender: messageData.sender,
+                content: messageData.payload?.content || ''
+              });
+            }
+            
+            // 피드백 세션 수집
+            if (messageData.type === 'feedback_session_summary') {
+              feedbackSessions.push({
+                timestamp: messageData.timestamp,
+                sessionId: messageData.payload?.sessionId,
+                participants: messageData.payload?.participants || [],
+                sessionMessages: messageData.payload?.sessionMessages || []
+              });
+            }
+          } catch (e) {
+            // JSON 파싱 실패 시 무시
+          }
+        });
+        
+        // 팀 멤버 정보 파싱 (개별 참여자 추적용)
+        let teamMembers = [];
+        try {
+          teamMembers = JSON.parse(team.team_info?.members || '[]');
+        } catch (e) {
+          // 파싱 실패 시 기본 구조 사용
+          teamMembers = [];
+        }
+
+        // 각 피드백 세션 분석
+        feedbackSessions.forEach(session => {
+          teamFeedbackCount++;
+          
+          // 세션 개시자 추론 (가장 가까운 시간의 피드백 요청으로 판단)
+          let initiator = 'unknown';
+          let initiatorId = null;
+          let closestRequest = null;
+          let minTimeDiff = Infinity;
+          
+          const sessionTime = new Date(session.timestamp);
+          feedbackRequests.forEach(request => {
+            const requestTime = new Date(request.timestamp);
+            const timeDiff = sessionTime - requestTime;
+            // 요청이 세션보다 먼저 있고, 시간 차이가 최소인 경우
+            if (timeDiff >= 0 && timeDiff < minTimeDiff) {
+              minTimeDiff = timeDiff;
+              closestRequest = request;
+            }
+          });
+          
+          if (closestRequest) {
+            if (closestRequest.sender === '나' || closestRequest.content.includes('James Lee')) {
+              initiator = 'user';
+              initiatorId = '나';
+              userInitiatedSessions.push(session.sessionId);
+            } else if (closestRequest.sender && closestRequest.sender.startsWith('agent_')) {
+              initiator = 'ai';
+              initiatorId = closestRequest.sender;
+              aiInitiatedSessions.push(session.sessionId);
+            }
+          } else {
+            // 요청을 찾지 못한 경우, 첫 번째 메시지의 발신자로 추론
+            const firstMessage = session.sessionMessages.find(msg => msg.type === 'message' && msg.sender !== 'system');
+            if (firstMessage) {
+              if (firstMessage.sender === '나' || firstMessage.sender.includes('user')) {
+                initiator = 'user';
+                initiatorId = '나';
+                userInitiatedSessions.push(session.sessionId);
+              } else if (firstMessage.sender && firstMessage.sender.startsWith('agent_')) {
+                initiator = 'ai';
+                initiatorId = firstMessage.sender;
+                aiInitiatedSessions.push(session.sessionId);
+              }
+            }
+          }
+          
+          // 개별 참여자별 개시 횟수 기록 (SD 계산용)
+          if (initiator === 'user' && initiatorId) {
+            // 사용자 개시 횟수 기록
+            const existingUserIndex = userInitiationCounts.findIndex(u => u.participantId === initiatorId);
+            if (existingUserIndex >= 0) {
+              userInitiationCounts[existingUserIndex].count++;
+            } else {
+              userInitiationCounts.push({ participantId: initiatorId, count: 1 });
+            }
+          } else if (initiator === 'ai' && initiatorId) {
+            // AI 개시 횟수 기록
+            const existingAiIndex = aiInitiationCounts.findIndex(a => a.participantId === initiatorId);
+            if (existingAiIndex >= 0) {
+              aiInitiationCounts[existingAiIndex].count++;
+            } else {
+              aiInitiationCounts.push({ participantId: initiatorId, count: 1 });
+            }
+          }
+          
+          // 피드백 세션의 모든 메시지를 분석 (양방향 피드백)
+          const sessionMessageLengths = [];
+          let sessionMessageCount = 0;
+          
+          session.sessionMessages.forEach(message => {
+            if (message.type === 'message' && message.content) {
+              sessionMessageCount++;
+              
+              // 각 메시지의 길이 계산
+              const koreanLength = (message.content.match(/[가-힣]/g) || []).length;
+              const otherLength = (message.content.match(/[^\가-힣\s]/g) || []).length * 0.5;
+              const messageLength = Math.round(koreanLength + otherLength);
+              
+              feedbackLengths.push(messageLength);
+              sessionMessageLengths.push(messageLength);
+              
+              // 피드백 제공자 구분 (사용자 vs AI)
+              const sender = message.sender || '';
+              if (sender === '나' || sender.includes('user')) {
+                userFeedbacks.push(messageLength);
+              } else if (sender.startsWith('agent_')) {
+                aiFeedbacks.push(messageLength);
+              }
+            }
+          });
+          
+          // 세션 턴 수 기록 (system 메시지 제외한 실제 대화 메시지 수)
+          sessionTurns.push(sessionMessageCount);
+          
+          // 세션별 평균 음절 수 계산
+          if (sessionMessageLengths.length > 0) {
+            const sessionAvg = sessionMessageLengths.reduce((sum, len) => sum + len, 0) / sessionMessageLengths.length;
+            sessionAverageSyllables.push(Math.round(sessionAvg * 100) / 100); // 소수점 2자리로 반올림
+          } else {
+            sessionAverageSyllables.push(0);
+          }
+        });
+      }
+      
+      feedbackCounts.push(teamFeedbackCount);
+    });
+    
+    // 사용자별 개시 횟수 분석 (각 사용자의 실제 개시 횟수)
+    const allUserInitiationCounts = [];
+    
+    // 각 팀별로 사용자 개시 횟수를 분리하여 계산
+    teamData.forEach(team => {
+      // 이 팀에서 사용자가 개시한 세션 수
+      let teamUserInitiations = 0;
+      
+      // 팀의 피드백 세션들을 다시 확인하여 사용자 개시 횟수 계산
+      if (team.chat) {
+        const teamFeedbackRequests = [];
+        const teamFeedbackSessions = [];
+        
+        team.chat.forEach(chatItem => {
+          try {
+            let messageData;
+            if (typeof chatItem === 'string') {
+              messageData = JSON.parse(chatItem);
+            } else {
+              messageData = chatItem;
+            }
+            
+            if (messageData.type === 'give_feedback' || 
+                (messageData.type === 'make_request' && messageData.payload?.requestType === 'give_feedback')) {
+              teamFeedbackRequests.push({
+                timestamp: messageData.timestamp,
+                sender: messageData.sender,
+                content: messageData.payload?.content || ''
+              });
+            }
+            
+            if (messageData.type === 'feedback_session_summary') {
+              teamFeedbackSessions.push({
+                timestamp: messageData.timestamp,
+                sessionId: messageData.payload?.sessionId,
+                sessionMessages: messageData.payload?.sessionMessages || []
+              });
+            }
+          } catch (e) {
+            // JSON 파싱 실패 시 무시
+          }
+        });
+        
+        // 각 세션의 개시자 판단
+        teamFeedbackSessions.forEach(session => {
+          let isUserInitiated = false;
+          
+          // 가장 가까운 피드백 요청으로 개시자 판단
+          let closestRequest = null;
+          let minTimeDiff = Infinity;
+          const sessionTime = new Date(session.timestamp);
+          
+          teamFeedbackRequests.forEach(request => {
+            const requestTime = new Date(request.timestamp);
+            const timeDiff = sessionTime - requestTime;
+            if (timeDiff >= 0 && timeDiff < minTimeDiff) {
+              minTimeDiff = timeDiff;
+              closestRequest = request;
+            }
+          });
+          
+          if (closestRequest) {
+            if (closestRequest.sender === '나' || closestRequest.content.includes('James Lee')) {
+              isUserInitiated = true;
+            }
+          } else {
+            // 첫 번째 메시지 발신자로 판단
+            const firstMessage = session.sessionMessages.find(msg => msg.type === 'message' && msg.sender !== 'system');
+            if (firstMessage && (firstMessage.sender === '나' || firstMessage.sender.includes('user'))) {
+              isUserInitiated = true;
+            }
+          }
+          
+          if (isUserInitiated) {
+            teamUserInitiations++;
+          }
+        });
+      }
+      
+      allUserInitiationCounts.push(teamUserInitiations);
+    });
+    
+    // AI별 개시 횟수 분석 (SD 계산용)
+    const allAiInitiationCounts = [];
+    
+    // AI 에이전트들의 개별 개시 횟수 수집 (중복 없이)
+    const uniqueAiAgents = new Set();
+    teamData.forEach(team => {
+      try {
+        const members = JSON.parse(team.team_info?.members || '[]');
+        members.forEach(member => {
+          if (member.roles && member.roles.includes('피드백하기') && !member.isUser) {
+            const participantId = member.agentId;
+            if (!uniqueAiAgents.has(participantId)) {
+              uniqueAiAgents.add(participantId);
+              const existingCount = aiInitiationCounts.find(a => a.participantId === participantId);
+              allAiInitiationCounts.push(existingCount ? existingCount.count : 0);
+            }
+          }
+        });
+      } catch (e) {
+        // 파싱 실패 시 기본 5개 AI 에이전트
+        for (let i = 0; i < 5; i++) {
+          const agentId = `agent_${i}`;
+          if (!uniqueAiAgents.has(agentId)) {
+            uniqueAiAgents.add(agentId);
+            allAiInitiationCounts.push(aiInitiationCounts.find(a => a.participantId === agentId)?.count || 0);
+          }
+        }
+      }
+    });
+
+    // 최소/최대 팀 정보 계산
+    let minMaxTeamInfo = { minTeam: null, maxTeam: null };
+    if (feedbackCounts.length > 0 && cycleNum > 0) {
+      const minCount = Math.min(...feedbackCounts);
+      const maxCount = Math.max(...feedbackCounts);
+      const minIndex = feedbackCounts.indexOf(minCount);
+      const maxIndex = feedbackCounts.indexOf(maxCount);
+      
+      const getTeamLabel = (team, index) => {
+        const ownerName = team.owner_info?.name || team.team_info?.ownerId || 'Unknown';
+        const participantId = `P${Object.keys(getTeamsByOwner()).indexOf(team.owner_info?.id || team.team_info?.ownerId) + 1}`;
+        return `${participantId}T${cycleNum}`;
+      };
+      
+      minMaxTeamInfo = {
+        minTeam: teamData[minIndex] ? {
+          label: getTeamLabel(teamData[minIndex], minIndex),
+          count: minCount
+        } : null,
+        maxTeam: teamData[maxIndex] ? {
+          label: getTeamLabel(teamData[maxIndex], maxIndex),
+          count: maxCount
+        } : null
+      };
+    }
+
+    return {
+      feedbackCounts,
+      feedbackLengths,
+      userFeedbacks,
+      aiFeedbacks,
+      totalFeedbacks: feedbackCounts.reduce((sum, count) => sum + count, 0),
+      totalFeedbackMessages: feedbackLengths.length, // 실제 주고받은 메시지 수
+      userInitiatedSessions: userInitiatedSessions.length,
+      aiInitiatedSessions: aiInitiatedSessions.length,
+      sessionTurns, // 각 피드백 세션의 턴 수 배열
+      sessionAverageSyllables, // 각 피드백 세션의 평균 음절 수 배열
+      totalUserFeedbackers, // 피드백 역할을 가진 사용자 수
+      totalAiFeedbackers, // 피드백 역할을 가진 AI 수
+      userInitiationStats: calculateStats(allUserInitiationCounts), // 사용자 개시 통계 (평균, SD 포함)
+      aiInitiationStats: calculateStats(allAiInitiationCounts), // AI 개시 통계 (평균, SD 포함)
+      minMaxTeamInfo
+    };
+  };
+
+  // 요청 데이터 분석 함수 (make_request 타입 메시지 분석)
+  const getRequestData = (teamData, cycleNum = 0) => {
+    const requestCounts = [];
+    const requestLengths = [];
+    
+    // 사용자 vs AI 요청 분리
+    const userRequests = [];
+    const aiRequests = [];
+    
+    // 요청자별 개시 횟수 추적 (SD 계산용)
+    const userRequestCounts = [];
+    const aiRequestCounts = [];
+    
+    // 각 팀별로 사용자 요청 횟수를 분리하여 계산
+    const allUserRequestCounts = [];
+    
+    // 요청 유형별 카운팅
+    const typeAnalysis = {
+      generate: 0,
+      evaluate: 0,
+      feedback: 0,
+      other: 0
+    };
+    
+    // 기타(빈 requestType) 케이스 저장
+    const otherExamples = [];
+    
+    teamData.forEach(team => {
+      let teamRequestCount = 0;
+      let teamUserRequests = 0;
+      
+      if (team.chat) {
+        team.chat.forEach(chatItem => {
+          try {
+            let messageData;
+            if (typeof chatItem === 'string') {
+              messageData = JSON.parse(chatItem);
+            } else {
+              messageData = chatItem;
+            }
+            
+            if (messageData.type === 'make_request') {
+              teamRequestCount++;
+              
+              // 요청 내용의 길이 계산
+              const content = messageData.payload?.content || '';
+              const koreanLength = (content.match(/[가-힣]/g) || []).length;
+              const otherLength = (content.match(/[^\가-힣\s]/g) || []).length * 0.5;
+              const requestLength = Math.round(koreanLength + otherLength);
+              
+              requestLengths.push(requestLength);
+              
+              // 요청 유형 분석
+              const requestType = messageData.payload?.requestType || '';
+              if (requestType === 'generate' || requestType === 'generate_idea') {
+                typeAnalysis.generate++;
+              } else if (requestType === 'evaluate' || requestType === 'evaluate_idea') {
+                typeAnalysis.evaluate++;
+              } else if (requestType === 'give_feedback') {
+                typeAnalysis.feedback++;
+              } else {
+                typeAnalysis.other++;
+                // 기타 케이스 저장 (최대 10개까지)
+                if (otherExamples.length < 10) {
+                  otherExamples.push({
+                    teamId: team.team_id,
+                    messageId: messageData.id,
+                    sender: messageData.sender,
+                    requestType: requestType,
+                    content: messageData.payload?.content || '',
+                    timestamp: messageData.timestamp
+                  });
+                }
+              }
+              
+              // 요청자 구분 (사용자 vs AI)
+              const sender = messageData.sender || '';
+              if (sender === '나' || sender.includes('user') || content.includes('James Lee')) {
+                userRequests.push(requestLength);
+                teamUserRequests++;
+              } else if (sender.startsWith('agent_')) {
+                aiRequests.push(requestLength);
+                
+                // AI 개별 요청자별 카운팅
+                const existingAiIndex = aiRequestCounts.findIndex(a => a.participantId === sender);
+                if (existingAiIndex >= 0) {
+                  aiRequestCounts[existingAiIndex].count++;
+                } else {
+                  aiRequestCounts.push({ participantId: sender, count: 1 });
+                }
+              }
+            }
+          } catch (e) {
+            // JSON 파싱 실패 시 무시
+          }
+        });
+      }
+      
+      requestCounts.push(teamRequestCount);
+      allUserRequestCounts.push(teamUserRequests);
+    });
+
+    // 피드백 역할을 가진 참여자 수 계산
+    const { totalUserFeedbackers, totalAiFeedbackers } = getFeedbackParticipantCounts(teamData);
+    
+    // AI별 요청 횟수 분석 (SD 계산용) - 중복 없이
+    const allAiRequestCounts = [];
+    const uniqueAiAgents = new Set();
+    
+    teamData.forEach(team => {
+      try {
+        const members = JSON.parse(team.team_info?.members || '[]');
+        members.forEach(member => {
+          if (member.roles && member.roles.includes('요청하기') && !member.isUser) {
+            const participantId = member.agentId;
+            if (!uniqueAiAgents.has(participantId)) {
+              uniqueAiAgents.add(participantId);
+              const existingCount = aiRequestCounts.find(a => a.participantId === participantId);
+              allAiRequestCounts.push(existingCount ? existingCount.count : 0);
+            }
+          }
+        });
+      } catch (e) {
+        // 파싱 실패 시 기본 5개 AI 에이전트
+        for (let i = 0; i < 5; i++) {
+          const agentId = `agent_${i}`;
+          if (!uniqueAiAgents.has(agentId)) {
+            uniqueAiAgents.add(agentId);
+            allAiRequestCounts.push(aiRequestCounts.find(a => a.participantId === agentId)?.count || 0);
+          }
+        }
+      }
+    });
+
+    // 최소/최대 팀 정보 계산
+    let minMaxTeamInfo = { minTeam: null, maxTeam: null };
+    if (requestCounts.length > 0 && cycleNum > 0) {
+      const minCount = Math.min(...requestCounts);
+      const maxCount = Math.max(...requestCounts);
+      const minIndex = requestCounts.indexOf(minCount);
+      const maxIndex = requestCounts.indexOf(maxCount);
+      
+      minMaxTeamInfo = {
+        minTeam: minIndex >= 0 ? `P${cycleNum}T${minIndex + 1} (${minCount}회)` : null,
+        maxTeam: maxIndex >= 0 ? `P${cycleNum}T${maxIndex + 1} (${maxCount}회)` : null
+      };
+    } else {
+      minMaxTeamInfo = {
+        minTeam: requestCounts.length > 0 ? Math.min(...requestCounts) : null,
+        maxTeam: requestCounts.length > 0 ? Math.max(...requestCounts) : null
+      };
+    }
+
+    // 요청 유형별 백분율 계산
+    const totalRequestsForPercentage = typeAnalysis.generate + typeAnalysis.evaluate + typeAnalysis.feedback + typeAnalysis.other;
+    const typeAnalysisWithPercent = {
+      ...typeAnalysis,
+      generatePercent: totalRequestsForPercentage > 0 ? Math.round((typeAnalysis.generate / totalRequestsForPercentage) * 100) : 0,
+      evaluatePercent: totalRequestsForPercentage > 0 ? Math.round((typeAnalysis.evaluate / totalRequestsForPercentage) * 100) : 0,
+      feedbackPercent: totalRequestsForPercentage > 0 ? Math.round((typeAnalysis.feedback / totalRequestsForPercentage) * 100) : 0,
+      otherPercent: totalRequestsForPercentage > 0 ? Math.round((typeAnalysis.other / totalRequestsForPercentage) * 100) : 0
+    };
+
+    return {
+      requestCounts,
+      requestLengths,
+      userRequests,
+      aiRequests,
+      totalRequests: requestCounts.reduce((sum, count) => sum + count, 0),
+      totalRequestMessages: requestLengths.length,
+      userRequestStats: calculateStats(allUserRequestCounts), // 사용자 요청 통계 (평균, SD 포함)
+      aiRequestStats: calculateStats(allAiRequestCounts), // AI 요청 통계 (평균, SD 포함)
+      totalUserRequesters: totalUserFeedbackers, // 요청 역할을 가진 사용자 수 (피드백 역할과 동일하다고 가정)
+      totalAiRequesters: totalAiFeedbackers, // 요청 역할을 가진 AI 수 (피드백 역할과 동일하다고 가정)
+      minMaxTeamInfo,
+      typeAnalysis: typeAnalysisWithPercent, // 요청 유형별 분석 (백분율 포함)
+      otherExamples // 기타 케이스 예시
+    };
+  };
+
+  // 평가 데이터 분석 함수
+  const getEvaluationData = (teamData, cycleNum = 0) => {
+    const evaluationCounts = [];
+    const noveltyScores = [];
+    const completenessScores = [];
+    const qualityScores = [];
+    const commentLengths = [];
+    
+    // 사용자 vs AI 평가 분리
+    const userEvaluations = {
+      novelty: [],
+      completeness: [],
+      quality: [],
+      comments: []
+    };
+    const aiEvaluations = {
+      novelty: [],
+      completeness: [],
+      quality: [],
+      comments: []
+    };
+
+    teamData.forEach(team => {
+      const ideas = team.ideas || [];
+      let teamEvaluationCount = 0;
+
+      ideas.forEach(ideaStr => {
+        try {
+          const idea = typeof ideaStr === 'string' ? JSON.parse(ideaStr) : ideaStr;
+          const evaluations = idea.evaluations || [];
+          
+          teamEvaluationCount += evaluations.length;
+
+          evaluations.forEach(evaluation => {
+            const scores = evaluation.scores || {};
+            const evaluator = evaluation.evaluator || '';
+            
+            // 개별 점수 수집
+            if (typeof scores.novelty === 'number') {
+              noveltyScores.push(scores.novelty);
+              if (evaluator === '나') {
+                userEvaluations.novelty.push(scores.novelty);
+              } else {
+                aiEvaluations.novelty.push(scores.novelty);
+              }
+            }
+            if (typeof scores.completeness === 'number') {
+              completenessScores.push(scores.completeness);
+              if (evaluator === '나') {
+                userEvaluations.completeness.push(scores.completeness);
+              } else {
+                aiEvaluations.completeness.push(scores.completeness);
+              }
+            }
+            if (typeof scores.quality === 'number') {
+              qualityScores.push(scores.quality);
+              if (evaluator === '나') {
+                userEvaluations.quality.push(scores.quality);
+              } else {
+                aiEvaluations.quality.push(scores.quality);
+              }
+            }
+
+            // 코멘트 길이 계산
+            const comment = evaluation.comment || '';
+            if (comment) {
+              const koreanLength = (comment.match(/[가-힣]/g) || []).length;
+              const otherLength = (comment.match(/[^\가-힣\s]/g) || []).length * 0.5;
+              const commentLength = Math.round(koreanLength + otherLength);
+              
+              commentLengths.push(commentLength);
+              if (evaluator === '나') {
+                userEvaluations.comments.push(commentLength);
+              } else {
+                aiEvaluations.comments.push(commentLength);
+              }
+            }
+          });
+        } catch (e) {
+          console.warn('Failed to parse idea for evaluation:', ideaStr, e);
+        }
+      });
+
+      evaluationCounts.push(teamEvaluationCount);
+    });
+
+    // 최소/최대 팀 정보 계산
+    let minMaxTeamInfo = { minTeam: null, maxTeam: null };
+    if (evaluationCounts.length > 0 && cycleNum > 0) {
+      const minCount = Math.min(...evaluationCounts);
+      const maxCount = Math.max(...evaluationCounts);
+      const minIndex = evaluationCounts.indexOf(minCount);
+      const maxIndex = evaluationCounts.indexOf(maxCount);
+      
+      const getTeamLabel = (team, index) => {
+        const ownerName = team.owner_info?.name || team.team_info?.ownerId || 'Unknown';
+        const participantId = `P${Object.keys(getTeamsByOwner()).indexOf(team.owner_info?.id || team.team_info?.ownerId) + 1}`;
+        return `${participantId}T${cycleNum}`;
+      };
+      
+      minMaxTeamInfo = {
+        minTeam: teamData[minIndex] ? {
+          label: getTeamLabel(teamData[minIndex], minIndex),
+          count: minCount
+        } : null,
+        maxTeam: teamData[maxIndex] ? {
+          label: getTeamLabel(teamData[maxIndex], maxIndex),
+          count: maxCount
+        } : null
+      };
+    }
+
+    return {
+      evaluationCounts,
+      noveltyScores,
+      completenessScores,
+      qualityScores,
+      commentLengths,
+      userEvaluations,
+      aiEvaluations,
+      totalEvaluations: evaluationCounts.reduce((sum, count) => sum + count, 0),
+      minMaxTeamInfo
+    };
+  };
+
+  // 각 사이클별 피드백 데이터 (실제 feedback_session_summary)
+  const team1FeedbackData = getFeedbackData(team1Data, 1);
+  const team2FeedbackData = getFeedbackData(team2Data, 2);
+  const team3FeedbackData = getFeedbackData(team3Data, 3);
+
+  // 각 사이클별 요청 데이터 (make_request)
+  const team1RequestData = getRequestData(team1Data, 1);
+  const team2RequestData = getRequestData(team2Data, 2);
+  const team3RequestData = getRequestData(team3Data, 3);
+
+  // 각 사이클별 평가 데이터
+  const team1EvalData = getEvaluationData(team1Data, 1);
+  const team2EvalData = getEvaluationData(team2Data, 2);
+  const team3EvalData = getEvaluationData(team3Data, 3);
+  
+  // 전체 피드백 데이터 통합
+  const totalFeedbackData = {
+    feedbackCounts: [...team1FeedbackData.feedbackCounts, ...team2FeedbackData.feedbackCounts, ...team3FeedbackData.feedbackCounts],
+    feedbackLengths: [...team1FeedbackData.feedbackLengths, ...team2FeedbackData.feedbackLengths, ...team3FeedbackData.feedbackLengths],
+    userFeedbacks: [...team1FeedbackData.userFeedbacks, ...team2FeedbackData.userFeedbacks, ...team3FeedbackData.userFeedbacks],
+    aiFeedbacks: [...team1FeedbackData.aiFeedbacks, ...team2FeedbackData.aiFeedbacks, ...team3FeedbackData.aiFeedbacks],
+    totalFeedbacks: team1FeedbackData.totalFeedbacks + team2FeedbackData.totalFeedbacks + team3FeedbackData.totalFeedbacks,
+    totalFeedbackMessages: team1FeedbackData.totalFeedbackMessages + team2FeedbackData.totalFeedbackMessages + team3FeedbackData.totalFeedbackMessages,
+    userInitiatedSessions: team1FeedbackData.userInitiatedSessions + team2FeedbackData.userInitiatedSessions + team3FeedbackData.userInitiatedSessions,
+    aiInitiatedSessions: team1FeedbackData.aiInitiatedSessions + team2FeedbackData.aiInitiatedSessions + team3FeedbackData.aiInitiatedSessions,
+    sessionTurns: [...team1FeedbackData.sessionTurns, ...team2FeedbackData.sessionTurns, ...team3FeedbackData.sessionTurns],
+    sessionAverageSyllables: [...team1FeedbackData.sessionAverageSyllables, ...team2FeedbackData.sessionAverageSyllables, ...team3FeedbackData.sessionAverageSyllables],
+    totalUserFeedbackers: team1FeedbackData.totalUserFeedbackers + team2FeedbackData.totalUserFeedbackers + team3FeedbackData.totalUserFeedbackers,
+    totalAiFeedbackers: team1FeedbackData.totalAiFeedbackers + team2FeedbackData.totalAiFeedbackers + team3FeedbackData.totalAiFeedbackers
+  };
+
+  // 전체 개시 통계는 개별 사이클의 통계를 통합하여 계산
+  const allTeamData = [...team1Data, ...team2Data, ...team3Data];
+  const totalInitiationData = getFeedbackData(allTeamData);
+  totalFeedbackData.userInitiationStats = totalInitiationData.userInitiationStats;
+  totalFeedbackData.aiInitiationStats = totalInitiationData.aiInitiationStats;
+
+  // 전체 요청 데이터 통합
+  const totalRequestData = {
+    requestCounts: [...team1RequestData.requestCounts, ...team2RequestData.requestCounts, ...team3RequestData.requestCounts],
+    requestLengths: [...team1RequestData.requestLengths, ...team2RequestData.requestLengths, ...team3RequestData.requestLengths],
+    userRequests: [...team1RequestData.userRequests, ...team2RequestData.userRequests, ...team3RequestData.userRequests],
+    aiRequests: [...team1RequestData.aiRequests, ...team2RequestData.aiRequests, ...team3RequestData.aiRequests],
+    totalRequests: team1RequestData.totalRequests + team2RequestData.totalRequests + team3RequestData.totalRequests,
+    totalRequestMessages: team1RequestData.totalRequestMessages + team2RequestData.totalRequestMessages + team3RequestData.totalRequestMessages,
+    totalUserRequesters: team1RequestData.totalUserRequesters + team2RequestData.totalUserRequesters + team3RequestData.totalUserRequesters,
+    totalAiRequesters: team1RequestData.totalAiRequesters + team2RequestData.totalAiRequesters + team3RequestData.totalAiRequesters
+  };
+
+  // 전체 요청 통계는 개별 사이클의 통계를 통합하여 계산
+  const totalRequestInitiationData = getRequestData(allTeamData);
+  totalRequestData.userRequestStats = totalRequestInitiationData.userRequestStats;
+  totalRequestData.aiRequestStats = totalRequestInitiationData.aiRequestStats;
+
+  // 전체 데이터 통합
+  const totalEvalData = {
+    evaluationCounts: [...team1EvalData.evaluationCounts, ...team2EvalData.evaluationCounts, ...team3EvalData.evaluationCounts],
+    noveltyScores: [...team1EvalData.noveltyScores, ...team2EvalData.noveltyScores, ...team3EvalData.noveltyScores],
+    completenessScores: [...team1EvalData.completenessScores, ...team2EvalData.completenessScores, ...team3EvalData.completenessScores],
+    qualityScores: [...team1EvalData.qualityScores, ...team2EvalData.qualityScores, ...team3EvalData.qualityScores],
+    commentLengths: [...team1EvalData.commentLengths, ...team2EvalData.commentLengths, ...team3EvalData.commentLengths],
+    totalEvaluations: team1EvalData.totalEvaluations + team2EvalData.totalEvaluations + team3EvalData.totalEvaluations,
+    userEvaluations: {
+      novelty: [...team1EvalData.userEvaluations.novelty, ...team2EvalData.userEvaluations.novelty, ...team3EvalData.userEvaluations.novelty],
+      completeness: [...team1EvalData.userEvaluations.completeness, ...team2EvalData.userEvaluations.completeness, ...team3EvalData.userEvaluations.completeness],
+      quality: [...team1EvalData.userEvaluations.quality, ...team2EvalData.userEvaluations.quality, ...team3EvalData.userEvaluations.quality],
+      comments: [...team1EvalData.userEvaluations.comments, ...team2EvalData.userEvaluations.comments, ...team3EvalData.userEvaluations.comments]
+    },
+    aiEvaluations: {
+      novelty: [...team1EvalData.aiEvaluations.novelty, ...team2EvalData.aiEvaluations.novelty, ...team3EvalData.aiEvaluations.novelty],
+      completeness: [...team1EvalData.aiEvaluations.completeness, ...team2EvalData.aiEvaluations.completeness, ...team3EvalData.aiEvaluations.completeness],
+      quality: [...team1EvalData.aiEvaluations.quality, ...team2EvalData.aiEvaluations.quality, ...team3EvalData.aiEvaluations.quality],
+      comments: [...team1EvalData.aiEvaluations.comments, ...team2EvalData.aiEvaluations.comments, ...team3EvalData.aiEvaluations.comments]
+    }
+  };
+
+  // 평가 통계 계산
+  const evaluationStats = {
+    team1: {
+      totalEvaluations: team1EvalData.totalEvaluations,
+      avgPerTeam: parseFloat((team1EvalData.evaluationCounts.reduce((sum, count) => sum + count, 0) / Math.max(team1EvalData.evaluationCounts.length, 1)).toFixed(2)),
+      minPerTeam: team1EvalData.evaluationCounts.length > 0 ? Math.min(...team1EvalData.evaluationCounts) : 0,
+      maxPerTeam: team1EvalData.evaluationCounts.length > 0 ? Math.max(...team1EvalData.evaluationCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team1EvalData.evaluationCounts).stdev.toFixed(2))
+    },
+    team2: {
+      totalEvaluations: team2EvalData.totalEvaluations,
+      avgPerTeam: parseFloat((team2EvalData.evaluationCounts.reduce((sum, count) => sum + count, 0) / Math.max(team2EvalData.evaluationCounts.length, 1)).toFixed(2)),
+      minPerTeam: team2EvalData.evaluationCounts.length > 0 ? Math.min(...team2EvalData.evaluationCounts) : 0,
+      maxPerTeam: team2EvalData.evaluationCounts.length > 0 ? Math.max(...team2EvalData.evaluationCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team2EvalData.evaluationCounts).stdev.toFixed(2))
+    },
+    team3: {
+      totalEvaluations: team3EvalData.totalEvaluations,
+      avgPerTeam: parseFloat((team3EvalData.evaluationCounts.reduce((sum, count) => sum + count, 0) / Math.max(team3EvalData.evaluationCounts.length, 1)).toFixed(2)),
+      minPerTeam: team3EvalData.evaluationCounts.length > 0 ? Math.min(...team3EvalData.evaluationCounts) : 0,
+      maxPerTeam: team3EvalData.evaluationCounts.length > 0 ? Math.max(...team3EvalData.evaluationCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team3EvalData.evaluationCounts).stdev.toFixed(2))
+    },
+    total: {
+      totalEvaluations: totalEvalData.totalEvaluations,
+      avgPerTeam: parseFloat((totalEvalData.evaluationCounts.reduce((sum, count) => sum + count, 0) / Math.max(totalEvalData.evaluationCounts.length, 1)).toFixed(2)),
+      minPerTeam: totalEvalData.evaluationCounts.length > 0 ? Math.min(...totalEvalData.evaluationCounts) : 0,
+      maxPerTeam: totalEvalData.evaluationCounts.length > 0 ? Math.max(...totalEvalData.evaluationCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(totalEvalData.evaluationCounts).stdev.toFixed(2))
+    }
+  };
+
+  // 점수 통계 (각 criteria별로 분리)
+  const scoreStats = {
+    team1: {
+      novelty: calculateStats(team1EvalData.noveltyScores),
+      completeness: calculateStats(team1EvalData.completenessScores),
+      quality: calculateStats(team1EvalData.qualityScores)
+    },
+    team2: {
+      novelty: calculateStats(team2EvalData.noveltyScores),
+      completeness: calculateStats(team2EvalData.completenessScores),
+      quality: calculateStats(team2EvalData.qualityScores)
+    },
+    team3: {
+      novelty: calculateStats(team3EvalData.noveltyScores),
+      completeness: calculateStats(team3EvalData.completenessScores),
+      quality: calculateStats(team3EvalData.qualityScores)
+    },
+    total: {
+      novelty: calculateStats(totalEvalData.noveltyScores),
+      completeness: calculateStats(totalEvalData.completenessScores),
+      quality: calculateStats(totalEvalData.qualityScores)
+    }
+  };
+
+  // 사용자 vs AI 평가 비교 통계 (사이클별)
+  const userVsAiStats = {
+    team1: {
+      user: {
+        novelty: calculateStats(team1EvalData.userEvaluations.novelty),
+        completeness: calculateStats(team1EvalData.userEvaluations.completeness),
+        quality: calculateStats(team1EvalData.userEvaluations.quality),
+        comments: calculateStats(team1EvalData.userEvaluations.comments)
+      },
+      ai: {
+        novelty: calculateStats(team1EvalData.aiEvaluations.novelty),
+        completeness: calculateStats(team1EvalData.aiEvaluations.completeness),
+        quality: calculateStats(team1EvalData.aiEvaluations.quality),
+        comments: calculateStats(team1EvalData.aiEvaluations.comments)
+      }
+    },
+    team2: {
+      user: {
+        novelty: calculateStats(team2EvalData.userEvaluations.novelty),
+        completeness: calculateStats(team2EvalData.userEvaluations.completeness),
+        quality: calculateStats(team2EvalData.userEvaluations.quality),
+        comments: calculateStats(team2EvalData.userEvaluations.comments)
+      },
+      ai: {
+        novelty: calculateStats(team2EvalData.aiEvaluations.novelty),
+        completeness: calculateStats(team2EvalData.aiEvaluations.completeness),
+        quality: calculateStats(team2EvalData.aiEvaluations.quality),
+        comments: calculateStats(team2EvalData.aiEvaluations.comments)
+      }
+    },
+    team3: {
+      user: {
+        novelty: calculateStats(team3EvalData.userEvaluations.novelty),
+        completeness: calculateStats(team3EvalData.userEvaluations.completeness),
+        quality: calculateStats(team3EvalData.userEvaluations.quality),
+        comments: calculateStats(team3EvalData.userEvaluations.comments)
+      },
+      ai: {
+        novelty: calculateStats(team3EvalData.aiEvaluations.novelty),
+        completeness: calculateStats(team3EvalData.aiEvaluations.completeness),
+        quality: calculateStats(team3EvalData.aiEvaluations.quality),
+        comments: calculateStats(team3EvalData.aiEvaluations.comments)
+      }
+    },
+    total: {
+      user: {
+        novelty: calculateStats(totalEvalData.userEvaluations.novelty),
+        completeness: calculateStats(totalEvalData.userEvaluations.completeness),
+        quality: calculateStats(totalEvalData.userEvaluations.quality),
+        comments: calculateStats(totalEvalData.userEvaluations.comments)
+      },
+      ai: {
+        novelty: calculateStats(totalEvalData.aiEvaluations.novelty),
+        completeness: calculateStats(totalEvalData.aiEvaluations.completeness),
+        quality: calculateStats(totalEvalData.aiEvaluations.quality),
+        comments: calculateStats(totalEvalData.aiEvaluations.comments)
+      }
+    }
+  };
+
+  // 피드백 통계 계산
+  const feedbackStats = {
+    team1: {
+      totalFeedbacks: team1FeedbackData.totalFeedbacks,
+      avgPerTeam: parseFloat((team1FeedbackData.totalFeedbacks / Math.max(team1Data.length, 1)).toFixed(2)),
+      minPerTeam: team1FeedbackData.feedbackCounts.length > 0 ? Math.min(...team1FeedbackData.feedbackCounts) : 0,
+      maxPerTeam: team1FeedbackData.feedbackCounts.length > 0 ? Math.max(...team1FeedbackData.feedbackCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team1FeedbackData.feedbackCounts).stdev.toFixed(2))
+    },
+    team2: {
+      totalFeedbacks: team2FeedbackData.totalFeedbacks,
+      avgPerTeam: parseFloat((team2FeedbackData.totalFeedbacks / Math.max(team2Data.length, 1)).toFixed(2)),
+      minPerTeam: team2FeedbackData.feedbackCounts.length > 0 ? Math.min(...team2FeedbackData.feedbackCounts) : 0,
+      maxPerTeam: team2FeedbackData.feedbackCounts.length > 0 ? Math.max(...team2FeedbackData.feedbackCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team2FeedbackData.feedbackCounts).stdev.toFixed(2))
+    },
+    team3: {
+      totalFeedbacks: team3FeedbackData.totalFeedbacks,
+      avgPerTeam: parseFloat((team3FeedbackData.totalFeedbacks / Math.max(team3Data.length, 1)).toFixed(2)),
+      minPerTeam: team3FeedbackData.feedbackCounts.length > 0 ? Math.min(...team3FeedbackData.feedbackCounts) : 0,
+      maxPerTeam: team3FeedbackData.feedbackCounts.length > 0 ? Math.max(...team3FeedbackData.feedbackCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(team3FeedbackData.feedbackCounts).stdev.toFixed(2))
+    },
+    total: {
+      totalFeedbacks: totalFeedbackData.totalFeedbacks,
+      avgPerTeam: parseFloat((totalFeedbackData.totalFeedbacks / Math.max(teams.length, 1)).toFixed(2)),
+      minPerTeam: totalFeedbackData.feedbackCounts.length > 0 ? Math.min(...totalFeedbackData.feedbackCounts) : 0,
+      maxPerTeam: totalFeedbackData.feedbackCounts.length > 0 ? Math.max(...totalFeedbackData.feedbackCounts) : 0,
+      stdevPerTeam: parseFloat(calculateStats(totalFeedbackData.feedbackCounts).stdev.toFixed(2))
+    }
+  };
+
+  // 사용자 vs AI 피드백 통계
+  const userVsAiFeedbackStats = {
+    team1: {
+      user: calculateStats(team1FeedbackData.userFeedbacks),
+      ai: calculateStats(team1FeedbackData.aiFeedbacks)
+    },
+    team2: {
+      user: calculateStats(team2FeedbackData.userFeedbacks),
+      ai: calculateStats(team2FeedbackData.aiFeedbacks)
+    },
+    team3: {
+      user: calculateStats(team3FeedbackData.userFeedbacks),
+      ai: calculateStats(team3FeedbackData.aiFeedbacks)
+    },
+    total: {
+      user: calculateStats(totalFeedbackData.userFeedbacks),
+      ai: calculateStats(totalFeedbackData.aiFeedbacks)
+    }
+  };
+
+  // 사용자 vs AI 요청 비교 통계 (길이별)
+  const userVsAiRequestStats = {
+    cycle1: {
+      user: team1RequestData.userRequests.length > 0 ? calculateStats(team1RequestData.userRequests) : { avg: 0, stdev: 0 },
+      ai: team1RequestData.aiRequests.length > 0 ? calculateStats(team1RequestData.aiRequests) : { avg: 0, stdev: 0 }
+    },
+    cycle2: {
+      user: team2RequestData.userRequests.length > 0 ? calculateStats(team2RequestData.userRequests) : { avg: 0, stdev: 0 },
+      ai: team2RequestData.aiRequests.length > 0 ? calculateStats(team2RequestData.aiRequests) : { avg: 0, stdev: 0 }
+    },
+    cycle3: {
+      user: team3RequestData.userRequests.length > 0 ? calculateStats(team3RequestData.userRequests) : { avg: 0, stdev: 0 },
+      ai: team3RequestData.aiRequests.length > 0 ? calculateStats(team3RequestData.aiRequests) : { avg: 0, stdev: 0 }
+    },
+    total: {
+      user: totalRequestData.userRequests.length > 0 ? calculateStats(totalRequestData.userRequests) : { avg: 0, stdev: 0 },
+      ai: totalRequestData.aiRequests.length > 0 ? calculateStats(totalRequestData.aiRequests) : { avg: 0, stdev: 0 }
+    }
+  };
+
+  // 코멘트 길이 통계
+  const commentStats = {
+    team1: calculateStats(team1EvalData.commentLengths),
+    team2: calculateStats(team2EvalData.commentLengths),
+    team3: calculateStats(team3EvalData.commentLengths),
+    total: calculateStats(totalEvalData.commentLengths)
+  };
+
+  // 행동 로그 분석을 위한 통계 계산
+  const actionStats = calculateTeamActivityStats(teams);
+  const statsSummary = generateStatsSummary(actionStats);
+
+  return (
+    <div className="analysis-content">
+      {/* 행동 로그 분석 섹션 (맨 위에 배치) */}
+      <div className="analysis-section">
+        <ActivityStatsDisplay 
+          stats={actionStats}
+          title="📈 행동 로그 분석"
+          showTeamBreakdown={true}
+          showComparison={true}
+          showInsights={true}
+        />
+      </div>
+
+      {/* 아이디어 결과 분석 헤더 */}
+      <div className="analysis-section">
+        <h2>🎯 아이디어 결과 분석</h2>
+        <p className="analysis-description">
+          각 팀 사이클에서 생성된 아이디어의 양적 분석과 아이디어 속성별 내용 복잡도를 분석한 결과입니다.
+        </p>
+        
+        {/* 결과 분석 탭 네비게이션 */}
+        <div className="result-analysis-tabs">
+          <button 
+            className={`tab-button ${activeResultTab === 'generation' ? 'active' : ''}`}
+            onClick={() => setActiveResultTab('generation')}
+          >
+            💡 아이디어 생성
+          </button>
+          <button 
+            className={`tab-button ${activeResultTab === 'evaluation' ? 'active' : ''}`}
+            onClick={() => setActiveResultTab('evaluation')}
+          >
+            🔍 평가
+          </button>
+          <button 
+            className={`tab-button ${activeResultTab === 'feedback' ? 'active' : ''}`}
+            onClick={() => setActiveResultTab('feedback')}
+          >
+            💬 피드백
+          </button>
+          <button 
+            className={`tab-button ${activeResultTab === 'request' ? 'active' : ''}`}
+            onClick={() => setActiveResultTab('request')}
+          >
+            📝 요청
+          </button>
+        </div>
+      </div>
+
+      {/* 아이디어 생성 탭 */}
+      {activeResultTab === 'generation' && (
+        <div>
+          {/* 팀 사이클별 아이디어 개수 분석 */}
+          <div className="analysis-section">
+        <h3>💡 팀 사이클별 아이디어 생성 개수</h3>
+        <p className="section-description">
+          각 사이클에서 팀들이 생성한 총 아이디어 개수의 분포를 보여줍니다.
+        </p>
+        
+        <div className="team-stats-table">
+          <div className="stats-header">
+            <div className="stat-label">구분</div>
+            <div className="stat-value">팀 수</div>
+            <div className="stat-value">평균</div>
+            <div className="stat-value">최소</div>
+            <div className="stat-value">최대</div>
+            <div className="stat-value">표준편차</div>
+          </div>
+          <div className="stats-row">
+            <div className="stat-label">팀 사이클 1</div>
+            <div className="stat-value">{team1Data.length}개</div>
+            <div className="stat-value">{ideaCountStats.team1.avg}개</div>
+            <div className="stat-value">{ideaCountStats.team1.min}개 {team1MinMax.minTeam ? `(${team1MinMax.minTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team1.max}개 {team1MinMax.maxTeam ? `(${team1MinMax.maxTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team1.stdev}</div>
+          </div>
+          <div className="stats-row">
+            <div className="stat-label">팀 사이클 2</div>
+            <div className="stat-value">{team2Data.length}개</div>
+            <div className="stat-value">{ideaCountStats.team2.avg}개</div>
+            <div className="stat-value">{ideaCountStats.team2.min}개 {team2MinMax.minTeam ? `(${team2MinMax.minTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team2.max}개 {team2MinMax.maxTeam ? `(${team2MinMax.maxTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team2.stdev}</div>
+          </div>
+          <div className="stats-row">
+            <div className="stat-label">팀 사이클 3</div>
+            <div className="stat-value">{team3Data.length}개</div>
+            <div className="stat-value">{ideaCountStats.team3.avg}개</div>
+            <div className="stat-value">{ideaCountStats.team3.min}개 {team3MinMax.minTeam ? `(${team3MinMax.minTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team3.max}개 {team3MinMax.maxTeam ? `(${team3MinMax.maxTeam.label})` : ''}</div>
+            <div className="stat-value">{ideaCountStats.team3.stdev}</div>
+          </div>
+          <div className="stats-row total-row">
+            <div className="stat-label">전체</div>
+            <div className="stat-value">{teams.length}개</div>
+            <div className="stat-value">{ideaCountStats.total.avg}개</div>
+            <div className="stat-value">{ideaCountStats.total.min}개</div>
+            <div className="stat-value">{ideaCountStats.total.max}개</div>
+            <div className="stat-value">{ideaCountStats.total.stdev}</div>
+          </div>
+        </div>
+      </div>
+
+          {/* 아이디어 속성별 내용 길이 분석 */}
+          <div className="analysis-section">
+        <h3>📏 아이디어 속성별 내용 복잡도 분석</h3>
+        <p className="section-description">
+          아이디어의 각 속성(Object, Function, Behavior, Structure)별 내용의 길이를 음절 단위로 분석합니다.
+        </p>
+
+        {/* 첫 번째 줄: Object와 Function */}
+        <div className="attribute-analysis-row">
+          {/* Object 분석 */}
+          <div className="attribute-analysis-half">
+            <h4>🎯 Object (대상) 속성 길이</h4>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">평균</div>
+                <div className="stat-value">표준편차</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{objectStats.team1.avg}음절</div>
+                <div className="stat-value">{objectStats.team1.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{objectStats.team2.avg}음절</div>
+                <div className="stat-value">{objectStats.team2.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{objectStats.team3.avg}음절</div>
+                <div className="stat-value">{objectStats.team3.stdev}</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{objectStats.total.avg}음절</div>
+                <div className="stat-value">{objectStats.total.stdev}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Function 분석 */}
+          <div className="attribute-analysis-half">
+            <h4>⚙️ Function (기능) 속성 길이</h4>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">평균</div>
+                <div className="stat-value">표준편차</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{functionStats.team1.avg}음절</div>
+                <div className="stat-value">{functionStats.team1.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{functionStats.team2.avg}음절</div>
+                <div className="stat-value">{functionStats.team2.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{functionStats.team3.avg}음절</div>
+                <div className="stat-value">{functionStats.team3.stdev}</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{functionStats.total.avg}음절</div>
+                <div className="stat-value">{functionStats.total.stdev}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 두 번째 줄: Behavior와 Structure */}
+        <div className="attribute-analysis-row">
+          {/* Behavior 분석 */}
+          <div className="attribute-analysis-half">
+            <h4>🎭 Behavior (행동) 속성 길이</h4>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">평균</div>
+                <div className="stat-value">표준편차</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{behaviorStats.team1.avg}음절</div>
+                <div className="stat-value">{behaviorStats.team1.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{behaviorStats.team2.avg}음절</div>
+                <div className="stat-value">{behaviorStats.team2.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{behaviorStats.team3.avg}음절</div>
+                <div className="stat-value">{behaviorStats.team3.stdev}</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{behaviorStats.total.avg}음절</div>
+                <div className="stat-value">{behaviorStats.total.stdev}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Structure 분석 */}
+          <div className="attribute-analysis-half">
+            <h4>🏗️ Structure (구조) 속성 길이</h4>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">평균</div>
+                <div className="stat-value">표준편차</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{structureStats.team1.avg}음절</div>
+                <div className="stat-value">{structureStats.team1.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{structureStats.team2.avg}음절</div>
+                <div className="stat-value">{structureStats.team2.stdev}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{structureStats.team3.avg}음절</div>
+                <div className="stat-value">{structureStats.team3.stdev}</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{structureStats.total.avg}음절</div>
+                <div className="stat-value">{structureStats.total.stdev}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      )}
+
+      {/* 평가 탭 */}
+      {activeResultTab === 'evaluation' && (
+        <div>
+          {/* 평가 분석 */}
+          <div className="analysis-section">
+        <h3>⭐ 아이디어 평가 분석</h3>
+        <p className="section-description">
+          각 팀 사이클에서 수행된 아이디어 평가의 횟수, 점수 분포, 코멘트 길이를 분석합니다.
+        </p>
+        
+        {/* 평가 횟수 분석 */}
+        <div className="evaluation-analysis">
+          <h4>📊 사이클별 평가 횟수</h4>
+          <div className="team-stats-table">
+            <div className="stats-header">
+              <div className="stat-label">구분</div>
+              <div className="stat-value">총 평가수</div>
+              <div className="stat-value">팀당 평균</div>
+              <div className="stat-value">최소</div>
+              <div className="stat-value">최대</div>
+              <div className="stat-value">표준편차</div>
+            </div>
+            <div className="stats-row">
+              <div className="stat-label">사이클 1</div>
+              <div className="stat-value">{evaluationStats.team1.totalEvaluations}회</div>
+              <div className="stat-value">{evaluationStats.team1.avgPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.team1.minPerTeam}회 {team1EvalData.minMaxTeamInfo.minTeam ? `(${team1EvalData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team1.maxPerTeam}회 {team1EvalData.minMaxTeamInfo.maxTeam ? `(${team1EvalData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team1.stdevPerTeam}</div>
+            </div>
+            <div className="stats-row">
+              <div className="stat-label">사이클 2</div>
+              <div className="stat-value">{evaluationStats.team2.totalEvaluations}회</div>
+              <div className="stat-value">{evaluationStats.team2.avgPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.team2.minPerTeam}회 {team2EvalData.minMaxTeamInfo.minTeam ? `(${team2EvalData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team2.maxPerTeam}회 {team2EvalData.minMaxTeamInfo.maxTeam ? `(${team2EvalData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team2.stdevPerTeam}</div>
+            </div>
+            <div className="stats-row">
+              <div className="stat-label">사이클 3</div>
+              <div className="stat-value">{evaluationStats.team3.totalEvaluations}회</div>
+              <div className="stat-value">{evaluationStats.team3.avgPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.team3.minPerTeam}회 {team3EvalData.minMaxTeamInfo.minTeam ? `(${team3EvalData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team3.maxPerTeam}회 {team3EvalData.minMaxTeamInfo.maxTeam ? `(${team3EvalData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+              <div className="stat-value">{evaluationStats.team3.stdevPerTeam}</div>
+            </div>
+            <div className="stats-row total-row">
+              <div className="stat-label">전체</div>
+              <div className="stat-value">{evaluationStats.total.totalEvaluations}회</div>
+              <div className="stat-value">{evaluationStats.total.avgPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.total.minPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.total.maxPerTeam}회</div>
+              <div className="stat-value">{evaluationStats.total.stdevPerTeam}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 평가 점수 분석 - 세 가지 criteria별 */}
+        <div className="evaluation-analysis">
+          <h4>🎯 사이클별 평가 점수 분포 (Criteria별)</h4>
+          
+          {/* 첫 번째 줄: Novelty와 Completeness */}
+          <div className="attribute-analysis-row">
+            <div className="attribute-analysis-half">
+              <h5>✨ Novelty (참신성)</h5>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">평균</div>
+                  <div className="stat-value">표준편차</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{scoreStats.team1.novelty.avg}점</div>
+                  <div className="stat-value">{scoreStats.team1.novelty.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{scoreStats.team2.novelty.avg}점</div>
+                  <div className="stat-value">{scoreStats.team2.novelty.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{scoreStats.team3.novelty.avg}점</div>
+                  <div className="stat-value">{scoreStats.team3.novelty.stdev}</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{scoreStats.total.novelty.avg}점</div>
+                  <div className="stat-value">{scoreStats.total.novelty.stdev}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="attribute-analysis-half">
+              <h5>🔧 Completeness (완성도)</h5>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">평균</div>
+                  <div className="stat-value">표준편차</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{scoreStats.team1.completeness.avg}점</div>
+                  <div className="stat-value">{scoreStats.team1.completeness.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{scoreStats.team2.completeness.avg}점</div>
+                  <div className="stat-value">{scoreStats.team2.completeness.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{scoreStats.team3.completeness.avg}점</div>
+                  <div className="stat-value">{scoreStats.team3.completeness.stdev}</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{scoreStats.total.completeness.avg}점</div>
+                  <div className="stat-value">{scoreStats.total.completeness.stdev}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 두 번째 줄: Quality와 Comment Length */}
+          <div className="attribute-analysis-row">
+            <div className="attribute-analysis-half">
+              <h5>⭐ Quality (품질)</h5>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">평균</div>
+                  <div className="stat-value">표준편차</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{scoreStats.team1.quality.avg}점</div>
+                  <div className="stat-value">{scoreStats.team1.quality.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{scoreStats.team2.quality.avg}점</div>
+                  <div className="stat-value">{scoreStats.team2.quality.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{scoreStats.team3.quality.avg}점</div>
+                  <div className="stat-value">{scoreStats.team3.quality.stdev}</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{scoreStats.total.quality.avg}점</div>
+                  <div className="stat-value">{scoreStats.total.quality.stdev}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="attribute-analysis-half">
+              <h5>💬 코멘트 길이</h5>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">평균</div>
+                  <div className="stat-value">표준편차</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{commentStats.team1.avg}음절</div>
+                  <div className="stat-value">{commentStats.team1.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{commentStats.team2.avg}음절</div>
+                  <div className="stat-value">{commentStats.team2.stdev}</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{commentStats.team3.avg}음절</div>
+                  <div className="stat-value">{commentStats.team3.stdev}</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{commentStats.total.avg}음절</div>
+                  <div className="stat-value">{commentStats.total.stdev}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 사용자 vs AI 평가 비교 */}
+        <div className="evaluation-analysis">
+          <h4>👤🤖 사용자 vs AI 평가 비교 (사이클별)</h4>
+          <p className="section-description">
+            각 팀 사이클별로 사용자('나')와 AI 에이전트의 3가지 평가 척도 차이를 분석합니다.
+          </p>
+
+          {/* Novelty 비교 */}
+          <div className="cycle-comparison">
+            <h5>✨ Novelty (참신성) - 사이클별 비교</h5>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">👤 사용자 평균</div>
+                <div className="stat-value">👤 SD</div>
+                <div className="stat-value">🤖 AI 평균</div>
+                <div className="stat-value">🤖 SD</div>
+                <div className="stat-value">사용자 평가수</div>
+                <div className="stat-value">AI 평가수</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{userVsAiStats.team1.user.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.user.novelty.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.novelty.stdev}</div>
+                <div className="stat-value">{team1EvalData.userEvaluations.novelty.length}회</div>
+                <div className="stat-value">{team1EvalData.aiEvaluations.novelty.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{userVsAiStats.team2.user.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.user.novelty.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.novelty.stdev}</div>
+                <div className="stat-value">{team2EvalData.userEvaluations.novelty.length}회</div>
+                <div className="stat-value">{team2EvalData.aiEvaluations.novelty.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{userVsAiStats.team3.user.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.user.novelty.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.novelty.stdev}</div>
+                <div className="stat-value">{team3EvalData.userEvaluations.novelty.length}회</div>
+                <div className="stat-value">{team3EvalData.aiEvaluations.novelty.length}회</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{userVsAiStats.total.user.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.user.novelty.stdev}</div>
+                <div className="stat-value">{userVsAiStats.total.ai.novelty.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.ai.novelty.stdev}</div>
+                <div className="stat-value">{totalEvalData.userEvaluations.novelty.length}회</div>
+                <div className="stat-value">{totalEvalData.aiEvaluations.novelty.length}회</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Completeness 비교 */}
+          <div className="cycle-comparison">
+            <h5>🔧 Completeness (완성도) - 사이클별 비교</h5>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">👤 사용자 평균</div>
+                <div className="stat-value">👤 SD</div>
+                <div className="stat-value">🤖 AI 평균</div>
+                <div className="stat-value">🤖 SD</div>
+                <div className="stat-value">사용자 평가수</div>
+                <div className="stat-value">AI 평가수</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{userVsAiStats.team1.user.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.user.completeness.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.completeness.stdev}</div>
+                <div className="stat-value">{team1EvalData.userEvaluations.completeness.length}회</div>
+                <div className="stat-value">{team1EvalData.aiEvaluations.completeness.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{userVsAiStats.team2.user.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.user.completeness.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.completeness.stdev}</div>
+                <div className="stat-value">{team2EvalData.userEvaluations.completeness.length}회</div>
+                <div className="stat-value">{team2EvalData.aiEvaluations.completeness.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{userVsAiStats.team3.user.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.user.completeness.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.completeness.stdev}</div>
+                <div className="stat-value">{team3EvalData.userEvaluations.completeness.length}회</div>
+                <div className="stat-value">{team3EvalData.aiEvaluations.completeness.length}회</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{userVsAiStats.total.user.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.user.completeness.stdev}</div>
+                <div className="stat-value">{userVsAiStats.total.ai.completeness.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.ai.completeness.stdev}</div>
+                <div className="stat-value">{totalEvalData.userEvaluations.completeness.length}회</div>
+                <div className="stat-value">{totalEvalData.aiEvaluations.completeness.length}회</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quality 비교 */}
+          <div className="cycle-comparison">
+            <h5>⭐ Quality (품질) - 사이클별 비교</h5>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">👤 사용자 평균</div>
+                <div className="stat-value">👤 SD</div>
+                <div className="stat-value">🤖 AI 평균</div>
+                <div className="stat-value">🤖 SD</div>
+                <div className="stat-value">사용자 평가수</div>
+                <div className="stat-value">AI 평가수</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{userVsAiStats.team1.user.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.user.quality.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.quality.stdev}</div>
+                <div className="stat-value">{team1EvalData.userEvaluations.quality.length}회</div>
+                <div className="stat-value">{team1EvalData.aiEvaluations.quality.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{userVsAiStats.team2.user.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.user.quality.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.quality.stdev}</div>
+                <div className="stat-value">{team2EvalData.userEvaluations.quality.length}회</div>
+                <div className="stat-value">{team2EvalData.aiEvaluations.quality.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{userVsAiStats.team3.user.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.user.quality.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.quality.stdev}</div>
+                <div className="stat-value">{team3EvalData.userEvaluations.quality.length}회</div>
+                <div className="stat-value">{team3EvalData.aiEvaluations.quality.length}회</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{userVsAiStats.total.user.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.user.quality.stdev}</div>
+                <div className="stat-value">{userVsAiStats.total.ai.quality.avg}점</div>
+                <div className="stat-value">{userVsAiStats.total.ai.quality.stdev}</div>
+                <div className="stat-value">{totalEvalData.userEvaluations.quality.length}회</div>
+                <div className="stat-value">{totalEvalData.aiEvaluations.quality.length}회</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Comment Length 비교 */}
+          <div className="cycle-comparison">
+            <h5>💬 Comment Length (코멘트 길이) - 사이클별 비교</h5>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">👤 사용자 평균</div>
+                <div className="stat-value">👤 SD</div>
+                <div className="stat-value">🤖 AI 평균</div>
+                <div className="stat-value">🤖 SD</div>
+                <div className="stat-value">사용자 평가수</div>
+                <div className="stat-value">AI 평가수</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{userVsAiStats.team1.user.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team1.user.comments.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team1.ai.comments.stdev}</div>
+                <div className="stat-value">{team1EvalData.userEvaluations.comments.length}회</div>
+                <div className="stat-value">{team1EvalData.aiEvaluations.comments.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{userVsAiStats.team2.user.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team2.user.comments.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team2.ai.comments.stdev}</div>
+                <div className="stat-value">{team2EvalData.userEvaluations.comments.length}회</div>
+                <div className="stat-value">{team2EvalData.aiEvaluations.comments.length}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{userVsAiStats.team3.user.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team3.user.comments.stdev}</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.team3.ai.comments.stdev}</div>
+                <div className="stat-value">{team3EvalData.userEvaluations.comments.length}회</div>
+                <div className="stat-value">{team3EvalData.aiEvaluations.comments.length}회</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{userVsAiStats.total.user.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.total.user.comments.stdev}</div>
+                <div className="stat-value">{userVsAiStats.total.ai.comments.avg}음절</div>
+                <div className="stat-value">{userVsAiStats.total.ai.comments.stdev}</div>
+                <div className="stat-value">{totalEvalData.userEvaluations.comments.length}회</div>
+                <div className="stat-value">{totalEvalData.aiEvaluations.comments.length}회</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 피드백 분석 */}
+        <div className="evaluation-analysis">
+          <h4>💬 피드백 분석</h4>
+          <p className="section-description">
+            각 팀 사이클별로 제공된 실제 피드백(feedback_session_summary)의 횟수와 길이를 분석합니다.
+          </p>
+          
+          {/* 사이클별 피드백 횟수 분석 */}
+          <div className="feedback-count-analysis">
+            <h5>📊 사이클별 피드백 횟수</h5>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">총 피드백</div>
+                <div className="stat-value">팀당 평균</div>
+                <div className="stat-value">최소</div>
+                <div className="stat-value">최대</div>
+                <div className="stat-value">표준편차</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{feedbackStats.team1.totalFeedbacks}회</div>
+                <div className="stat-value">{feedbackStats.team1.avgPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.team1.minPerTeam}회 {team1FeedbackData.minMaxTeamInfo.minTeam ? `(${team1FeedbackData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team1.maxPerTeam}회 {team1FeedbackData.minMaxTeamInfo.maxTeam ? `(${team1FeedbackData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team1.stdevPerTeam}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{feedbackStats.team2.totalFeedbacks}회</div>
+                <div className="stat-value">{feedbackStats.team2.avgPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.team2.minPerTeam}회 {team2FeedbackData.minMaxTeamInfo.minTeam ? `(${team2FeedbackData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team2.maxPerTeam}회 {team2FeedbackData.minMaxTeamInfo.maxTeam ? `(${team2FeedbackData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team2.stdevPerTeam}</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{feedbackStats.team3.totalFeedbacks}회</div>
+                <div className="stat-value">{feedbackStats.team3.avgPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.team3.minPerTeam}회 {team3FeedbackData.minMaxTeamInfo.minTeam ? `(${team3FeedbackData.minMaxTeamInfo.minTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team3.maxPerTeam}회 {team3FeedbackData.minMaxTeamInfo.maxTeam ? `(${team3FeedbackData.minMaxTeamInfo.maxTeam.label})` : ''}</div>
+                <div className="stat-value">{feedbackStats.team3.stdevPerTeam}</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{feedbackStats.total.totalFeedbacks}회</div>
+                <div className="stat-value">{feedbackStats.total.avgPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.total.minPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.total.maxPerTeam}회</div>
+                <div className="stat-value">{feedbackStats.total.stdevPerTeam}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 사용자 vs AI 피드백 비교 */}
+          <div className="feedback-comparison">
+            <h5>👤🤖 사용자 vs AI 피드백 비교 (사이클별)</h5>
+            <p className="section-description">
+              각 팀 사이클별로 사용자('나')와 AI 에이전트가 제공한 피드백의 특성을 비교 분석합니다.
+            </p>
+
+            {/* 피드백 횟수 비교 */}
+            <div className="cycle-comparison">
+              <h6>📈 피드백 제공 횟수 비교</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 피드백</div>
+                  <div className="stat-value">🤖 AI 피드백</div>
+                  <div className="stat-value">총 피드백</div>
+                  <div className="stat-value">사용자 비율</div>
+                  <div className="stat-value">AI 비율</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team1FeedbackData.aiFeedbacks.length}회</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbackMessages}회</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbackMessages > 0 ? ((team1FeedbackData.userFeedbacks.length / team1FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbackMessages > 0 ? ((team1FeedbackData.aiFeedbacks.length / team1FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team2FeedbackData.aiFeedbacks.length}회</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbackMessages}회</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbackMessages > 0 ? ((team2FeedbackData.userFeedbacks.length / team2FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbackMessages > 0 ? ((team2FeedbackData.aiFeedbacks.length / team2FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team3FeedbackData.aiFeedbacks.length}회</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbackMessages}회</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbackMessages > 0 ? ((team3FeedbackData.userFeedbacks.length / team3FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbackMessages > 0 ? ((team3FeedbackData.aiFeedbacks.length / team3FeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalFeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{totalFeedbackData.aiFeedbacks.length}회</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbackMessages}회</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbackMessages > 0 ? ((totalFeedbackData.userFeedbacks.length / totalFeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbackMessages > 0 ? ((totalFeedbackData.aiFeedbacks.length / totalFeedbackData.totalFeedbackMessages) * 100).toFixed(1) : 0}%</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 피드백 길이 비교 */}
+            <div className="cycle-comparison">
+              <h6>📝 피드백 길이 비교</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 평균</div>
+                  <div className="stat-value">👤 SD</div>
+                  <div className="stat-value">🤖 AI 평균</div>
+                  <div className="stat-value">🤖 SD</div>
+                  <div className="stat-value">사용자 피드백</div>
+                  <div className="stat-value">AI 피드백</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team1.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team1.user.stdev}</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team1.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team1.ai.stdev}</div>
+                  <div className="stat-value">{team1FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team1FeedbackData.aiFeedbacks.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team2.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team2.user.stdev}</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team2.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team2.ai.stdev}</div>
+                  <div className="stat-value">{team2FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team2FeedbackData.aiFeedbacks.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team3.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team3.user.stdev}</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team3.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.team3.ai.stdev}</div>
+                  <div className="stat-value">{team3FeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{team3FeedbackData.aiFeedbacks.length}회</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.total.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.total.user.stdev}</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.total.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiFeedbackStats.total.ai.stdev}</div>
+                  <div className="stat-value">{totalFeedbackData.userFeedbacks.length}회</div>
+                  <div className="stat-value">{totalFeedbackData.aiFeedbacks.length}회</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 피드백 세션 개시자 분석 */}
+          <div className="feedback-initiation-analysis">
+            <h5>🚀 피드백 세션 개시 분석</h5>
+            <p className="section-description">
+              각 팀 사이클별로 피드백 세션을 누가 시작했는지(사용자 vs AI) 분석합니다.
+            </p>
+
+            <div className="cycle-comparison">
+              <h6>📊 피드백 세션 개시자 비교</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 개시</div>
+                  <div className="stat-value">🤖 AI 개시</div>
+                  <div className="stat-value">총 세션수</div>
+                  <div className="stat-value">사용자 개시율</div>
+                  <div className="stat-value">AI 개시율</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1FeedbackData.userInitiatedSessions}회</div>
+                  <div className="stat-value">{team1FeedbackData.aiInitiatedSessions}회</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbacks}회</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbacks > 0 ? ((team1FeedbackData.userInitiatedSessions / team1FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team1FeedbackData.totalFeedbacks > 0 ? ((team1FeedbackData.aiInitiatedSessions / team1FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2FeedbackData.userInitiatedSessions}회</div>
+                  <div className="stat-value">{team2FeedbackData.aiInitiatedSessions}회</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbacks}회</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbacks > 0 ? ((team2FeedbackData.userInitiatedSessions / team2FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team2FeedbackData.totalFeedbacks > 0 ? ((team2FeedbackData.aiInitiatedSessions / team2FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3FeedbackData.userInitiatedSessions}회</div>
+                  <div className="stat-value">{team3FeedbackData.aiInitiatedSessions}회</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbacks}회</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbacks > 0 ? ((team3FeedbackData.userInitiatedSessions / team3FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{team3FeedbackData.totalFeedbacks > 0 ? ((team3FeedbackData.aiInitiatedSessions / team3FeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalFeedbackData.userInitiatedSessions}회</div>
+                  <div className="stat-value">{totalFeedbackData.aiInitiatedSessions}회</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbacks}회</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbacks > 0 ? ((totalFeedbackData.userInitiatedSessions / totalFeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                  <div className="stat-value">{totalFeedbackData.totalFeedbacks > 0 ? ((totalFeedbackData.aiInitiatedSessions / totalFeedbackData.totalFeedbacks) * 100).toFixed(1) : 0}%</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* 피드백 개시자별 평균 개시 횟수 분석 */}
+            <div className="cycle-comparison">
+              <h6>👤🤖 개시자별 평균 피드백 개시 횟수</h6>
+              <p className="section-description">
+                피드백 역할을 맡은 사용자와 AI가 평균적으로 몇 개의 피드백 세션을 개시했는지 분석합니다.
+              </p>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 평균</div>
+                  <div className="stat-value">👤 사용자 SD</div>
+                  <div className="stat-value">🤖 AI 평균</div>
+                  <div className="stat-value">🤖 AI SD</div>
+                  <div className="stat-value">사용자 수</div>
+                  <div className="stat-value">AI 수</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1FeedbackData.userInitiationStats.avg}회</div>
+                  <div className="stat-value">{team1FeedbackData.userInitiationStats.stdev}</div>
+                  <div className="stat-value">{team1FeedbackData.aiInitiationStats.avg}회</div>
+                  <div className="stat-value">{team1FeedbackData.aiInitiationStats.stdev}</div>
+                  <div className="stat-value">{team1FeedbackData.totalUserFeedbackers}명</div>
+                  <div className="stat-value">{team1FeedbackData.totalAiFeedbackers}명</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2FeedbackData.userInitiationStats.avg}회</div>
+                  <div className="stat-value">{team2FeedbackData.userInitiationStats.stdev}</div>
+                  <div className="stat-value">{team2FeedbackData.aiInitiationStats.avg}회</div>
+                  <div className="stat-value">{team2FeedbackData.aiInitiationStats.stdev}</div>
+                  <div className="stat-value">{team2FeedbackData.totalUserFeedbackers}명</div>
+                  <div className="stat-value">{team2FeedbackData.totalAiFeedbackers}명</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3FeedbackData.userInitiationStats.avg}회</div>
+                  <div className="stat-value">{team3FeedbackData.userInitiationStats.stdev}</div>
+                  <div className="stat-value">{team3FeedbackData.aiInitiationStats.avg}회</div>
+                  <div className="stat-value">{team3FeedbackData.aiInitiationStats.stdev}</div>
+                  <div className="stat-value">{team3FeedbackData.totalUserFeedbackers}명</div>
+                  <div className="stat-value">{team3FeedbackData.totalAiFeedbackers}명</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalFeedbackData.userInitiationStats?.avg || 0}회</div>
+                  <div className="stat-value">{totalFeedbackData.userInitiationStats?.stdev || 0}</div>
+                  <div className="stat-value">{totalFeedbackData.aiInitiationStats?.avg || 0}회</div>
+                  <div className="stat-value">{totalFeedbackData.aiInitiationStats?.stdev || 0}</div>
+                  <div className="stat-value">{totalFeedbackData.totalUserFeedbackers}명</div>
+                  <div className="stat-value">{totalFeedbackData.totalAiFeedbackers}명</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 피드백 세션 턴 수 및 음절 분석 */}
+          <div className="feedback-turn-analysis">
+            <h5>💬 피드백 세션 대화 턴 분석</h5>
+            <p className="section-description">
+              각 팀 사이클별로 피드백 세션에서 오고간 대화 턴 수와 각 피드백의 평균 음절 수를 분석합니다.
+            </p>
+
+            <div className="cycle-comparison">
+              <h6>🔄 피드백 세션 대화 턴 수 통계</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">평균 턴 수</div>
+                  <div className="stat-value">턴 수 SD</div>
+                  <div className="stat-value">최소 턴 수</div>
+                  <div className="stat-value">최대 턴 수</div>
+                  <div className="stat-value">총 세션 수</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1FeedbackData.sessionTurns.length > 0 ? calculateStats(team1FeedbackData.sessionTurns).avg : 0}턴</div>
+                  <div className="stat-value">{team1FeedbackData.sessionTurns.length > 0 ? calculateStats(team1FeedbackData.sessionTurns).stdev : 0}</div>
+                  <div className="stat-value">{team1FeedbackData.sessionTurns.length > 0 ? calculateStats(team1FeedbackData.sessionTurns).min : 0}턴</div>
+                  <div className="stat-value">{team1FeedbackData.sessionTurns.length > 0 ? calculateStats(team1FeedbackData.sessionTurns).max : 0}턴</div>
+                  <div className="stat-value">{team1FeedbackData.sessionTurns.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2FeedbackData.sessionTurns.length > 0 ? calculateStats(team2FeedbackData.sessionTurns).avg : 0}턴</div>
+                  <div className="stat-value">{team2FeedbackData.sessionTurns.length > 0 ? calculateStats(team2FeedbackData.sessionTurns).stdev : 0}</div>
+                  <div className="stat-value">{team2FeedbackData.sessionTurns.length > 0 ? calculateStats(team2FeedbackData.sessionTurns).min : 0}턴</div>
+                  <div className="stat-value">{team2FeedbackData.sessionTurns.length > 0 ? calculateStats(team2FeedbackData.sessionTurns).max : 0}턴</div>
+                  <div className="stat-value">{team2FeedbackData.sessionTurns.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3FeedbackData.sessionTurns.length > 0 ? calculateStats(team3FeedbackData.sessionTurns).avg : 0}턴</div>
+                  <div className="stat-value">{team3FeedbackData.sessionTurns.length > 0 ? calculateStats(team3FeedbackData.sessionTurns).stdev : 0}</div>
+                  <div className="stat-value">{team3FeedbackData.sessionTurns.length > 0 ? calculateStats(team3FeedbackData.sessionTurns).min : 0}턴</div>
+                  <div className="stat-value">{team3FeedbackData.sessionTurns.length > 0 ? calculateStats(team3FeedbackData.sessionTurns).max : 0}턴</div>
+                  <div className="stat-value">{team3FeedbackData.sessionTurns.length}회</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalFeedbackData.sessionTurns.length > 0 ? calculateStats(totalFeedbackData.sessionTurns).avg : 0}턴</div>
+                  <div className="stat-value">{totalFeedbackData.sessionTurns.length > 0 ? calculateStats(totalFeedbackData.sessionTurns).stdev : 0}</div>
+                  <div className="stat-value">{totalFeedbackData.sessionTurns.length > 0 ? calculateStats(totalFeedbackData.sessionTurns).min : 0}턴</div>
+                  <div className="stat-value">{totalFeedbackData.sessionTurns.length > 0 ? calculateStats(totalFeedbackData.sessionTurns).max : 0}턴</div>
+                  <div className="stat-value">{totalFeedbackData.sessionTurns.length}회</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="cycle-comparison">
+              <h6>📝 피드백 세션별 평균 음절 수 통계</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">세션 평균 음절</div>
+                  <div className="stat-value">음절 SD</div>
+                  <div className="stat-value">최소 평균 음절</div>
+                  <div className="stat-value">최대 평균 음절</div>
+                  <div className="stat-value">총 세션 수</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team1FeedbackData.sessionAverageSyllables).avg : 0}음절</div>
+                  <div className="stat-value">{team1FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team1FeedbackData.sessionAverageSyllables).stdev : 0}</div>
+                  <div className="stat-value">{team1FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team1FeedbackData.sessionAverageSyllables).min : 0}음절</div>
+                  <div className="stat-value">{team1FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team1FeedbackData.sessionAverageSyllables).max : 0}음절</div>
+                  <div className="stat-value">{team1FeedbackData.sessionAverageSyllables.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team2FeedbackData.sessionAverageSyllables).avg : 0}음절</div>
+                  <div className="stat-value">{team2FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team2FeedbackData.sessionAverageSyllables).stdev : 0}</div>
+                  <div className="stat-value">{team2FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team2FeedbackData.sessionAverageSyllables).min : 0}음절</div>
+                  <div className="stat-value">{team2FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team2FeedbackData.sessionAverageSyllables).max : 0}음절</div>
+                  <div className="stat-value">{team2FeedbackData.sessionAverageSyllables.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team3FeedbackData.sessionAverageSyllables).avg : 0}음절</div>
+                  <div className="stat-value">{team3FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team3FeedbackData.sessionAverageSyllables).stdev : 0}</div>
+                  <div className="stat-value">{team3FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team3FeedbackData.sessionAverageSyllables).min : 0}음절</div>
+                  <div className="stat-value">{team3FeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(team3FeedbackData.sessionAverageSyllables).max : 0}음절</div>
+                  <div className="stat-value">{team3FeedbackData.sessionAverageSyllables.length}회</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalFeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(totalFeedbackData.sessionAverageSyllables).avg : 0}음절</div>
+                  <div className="stat-value">{totalFeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(totalFeedbackData.sessionAverageSyllables).stdev : 0}</div>
+                  <div className="stat-value">{totalFeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(totalFeedbackData.sessionAverageSyllables).min : 0}음절</div>
+                  <div className="stat-value">{totalFeedbackData.sessionAverageSyllables.length > 0 ? calculateStats(totalFeedbackData.sessionAverageSyllables).max : 0}음절</div>
+                  <div className="stat-value">{totalFeedbackData.sessionAverageSyllables.length}회</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 피드백 탭 */}
+      {activeResultTab === 'feedback' && (
+        <div>
+          <div className="analysis-section">
+            <h3>💬 피드백 분석</h3>
+            <p className="section-description">
+              현재 피드백 관련 분석 데이터가 준비되는 대로 여기에 표시됩니다.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 요청 탭 */}
+      {activeResultTab === 'request' && (
+        <div>
+          {/* 요청 분석 */}
+          <div className="analysis-section">
+          <h3>📢 요청(Request) 분석</h3>
+          <p className="section-description">
+            각 팀 사이클에서 수행된 요청(make_request)의 횟수, 길이, 개시자 분석 결과입니다.
+          </p>
+
+          {/* 사이클별 요청 횟수 */}
+          <div className="cycle-stats">
+            <h4>📊 사이클별 요청 횟수</h4>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{team1RequestData.totalRequests}회</div>
+                <div className="stat-detail">
+                  {team1RequestData.minMaxTeamInfo.minTeam && team1RequestData.minMaxTeamInfo.maxTeam ? (
+                    <>
+                      <div>최소: {team1RequestData.minMaxTeamInfo.minTeam}</div>
+                      <div>최대: {team1RequestData.minMaxTeamInfo.maxTeam}</div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{team2RequestData.totalRequests}회</div>
+                <div className="stat-detail">
+                  {team2RequestData.minMaxTeamInfo.minTeam && team2RequestData.minMaxTeamInfo.maxTeam ? (
+                    <>
+                      <div>최소: {team2RequestData.minMaxTeamInfo.minTeam}</div>
+                      <div>최대: {team2RequestData.minMaxTeamInfo.maxTeam}</div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{team3RequestData.totalRequests}회</div>
+                <div className="stat-detail">
+                  {team3RequestData.minMaxTeamInfo.minTeam && team3RequestData.minMaxTeamInfo.maxTeam ? (
+                    <>
+                      <div>최소: {team3RequestData.minMaxTeamInfo.minTeam}</div>
+                      <div>최대: {team3RequestData.minMaxTeamInfo.maxTeam}</div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+              <div className="stat-item total">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{totalRequestData.totalRequests}회</div>
+                <div className="stat-detail">모든 사이클 통합</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 사용자 vs AI 요청 비교 */}
+          <div className="feedback-comparison-analysis">
+            <h5>👤🤖 사용자 vs AI 요청 비교 (사이클별)</h5>
+            <p className="section-description">
+              각 사이클별로 사용자와 AI가 작성한 요청의 평균 길이와 표준편차를 비교 분석합니다.
+            </p>
+
+            <div className="cycle-comparison">
+              <h6>📊 요청 길이 통계</h6>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 평균</div>
+                  <div className="stat-value">👤 사용자 SD</div>
+                  <div className="stat-value">🤖 AI 평균</div>
+                  <div className="stat-value">🤖 AI SD</div>
+                  <div className="stat-value">사용자 요청수</div>
+                  <div className="stat-value">AI 요청수</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle1.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle1.user.stdev}</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle1.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle1.ai.stdev}</div>
+                  <div className="stat-value">{team1RequestData.userRequests.length}회</div>
+                  <div className="stat-value">{team1RequestData.aiRequests.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle2.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle2.user.stdev}</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle2.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle2.ai.stdev}</div>
+                  <div className="stat-value">{team2RequestData.userRequests.length}회</div>
+                  <div className="stat-value">{team2RequestData.aiRequests.length}회</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle3.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle3.user.stdev}</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle3.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.cycle3.ai.stdev}</div>
+                  <div className="stat-value">{team3RequestData.userRequests.length}회</div>
+                  <div className="stat-value">{team3RequestData.aiRequests.length}회</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{userVsAiRequestStats.total.user.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.total.user.stdev}</div>
+                  <div className="stat-value">{userVsAiRequestStats.total.ai.avg}음절</div>
+                  <div className="stat-value">{userVsAiRequestStats.total.ai.stdev}</div>
+                  <div className="stat-value">{totalRequestData.userRequests.length}회</div>
+                  <div className="stat-value">{totalRequestData.aiRequests.length}회</div>
+                </div>
+              </div>
+            </div>
+          
+            {/* 요청자별 평균 요청 개시 횟수 */}
+            <div className="cycle-comparison">
+              <h6>👤🤖 개시자별 평균 요청 개시 횟수</h6>
+              <p className="section-description">
+                요청 역할을 맡은 사용자와 AI가 평균적으로 몇 개의 요청을 개시했는지 분석합니다.
+              </p>
+              <div className="team-stats-table">
+                <div className="stats-header">
+                  <div className="stat-label">구분</div>
+                  <div className="stat-value">👤 사용자 평균</div>
+                  <div className="stat-value">👤 사용자 SD</div>
+                  <div className="stat-value">🤖 AI 평균</div>
+                  <div className="stat-value">🤖 AI SD</div>
+                  <div className="stat-value">사용자 수</div>
+                  <div className="stat-value">AI 수</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 1</div>
+                  <div className="stat-value">{team1RequestData.userRequestStats.avg}회</div>
+                  <div className="stat-value">{team1RequestData.userRequestStats.stdev}</div>
+                  <div className="stat-value">{team1RequestData.aiRequestStats.avg}회</div>
+                  <div className="stat-value">{team1RequestData.aiRequestStats.stdev}</div>
+                  <div className="stat-value">{team1RequestData.totalUserRequesters}명</div>
+                  <div className="stat-value">{team1RequestData.totalAiRequesters}명</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 2</div>
+                  <div className="stat-value">{team2RequestData.userRequestStats.avg}회</div>
+                  <div className="stat-value">{team2RequestData.userRequestStats.stdev}</div>
+                  <div className="stat-value">{team2RequestData.aiRequestStats.avg}회</div>
+                  <div className="stat-value">{team2RequestData.aiRequestStats.stdev}</div>
+                  <div className="stat-value">{team2RequestData.totalUserRequesters}명</div>
+                  <div className="stat-value">{team2RequestData.totalAiRequesters}명</div>
+                </div>
+                <div className="stats-row">
+                  <div className="stat-label">사이클 3</div>
+                  <div className="stat-value">{team3RequestData.userRequestStats.avg}회</div>
+                  <div className="stat-value">{team3RequestData.userRequestStats.stdev}</div>
+                  <div className="stat-value">{team3RequestData.aiRequestStats.avg}회</div>
+                  <div className="stat-value">{team3RequestData.aiRequestStats.stdev}</div>
+                  <div className="stat-value">{team3RequestData.totalUserRequesters}명</div>
+                  <div className="stat-value">{team3RequestData.totalAiRequesters}명</div>
+                </div>
+                <div className="stats-row total-row">
+                  <div className="stat-label">전체</div>
+                  <div className="stat-value">{totalRequestData.userRequestStats?.avg || 0}회</div>
+                  <div className="stat-value">{totalRequestData.userRequestStats?.stdev || 0}</div>
+                  <div className="stat-value">{totalRequestData.aiRequestStats?.avg || 0}회</div>
+                  <div className="stat-value">{totalRequestData.aiRequestStats?.stdev || 0}</div>
+                  <div className="stat-value">{totalRequestData.totalUserRequesters}명</div>
+                  <div className="stat-value">{totalRequestData.totalAiRequesters}명</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 요청 유형별 분석 */}
+          <div className="cycle-comparison">
+            <h6>📋 요청 유형별 분포 분석</h6>
+            <p className="section-description">
+              요청 내용을 분석하여 유형별(아이디어 생성, 평가, 피드백 요청) 분포를 파악합니다.
+            </p>
+            <div className="team-stats-table">
+              <div className="stats-header">
+                <div className="stat-label">구분</div>
+                <div className="stat-value">💡 아이디어 생성</div>
+                <div className="stat-value">⭐ 평가</div>
+                <div className="stat-value">💬 피드백 요청</div>
+                <div className="stat-value">❓ 기타</div>
+                <div className="stat-value">총 요청수</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 1</div>
+                <div className="stat-value">{team1RequestData.typeAnalysis.generate}회 ({team1RequestData.typeAnalysis.generatePercent}%)</div>
+                <div className="stat-value">{team1RequestData.typeAnalysis.evaluate}회 ({team1RequestData.typeAnalysis.evaluatePercent}%)</div>
+                <div className="stat-value">{team1RequestData.typeAnalysis.feedback}회 ({team1RequestData.typeAnalysis.feedbackPercent}%)</div>
+                <div className="stat-value">{team1RequestData.typeAnalysis.other}회 ({team1RequestData.typeAnalysis.otherPercent}%)</div>
+                <div className="stat-value">{team1RequestData.totalRequests}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 2</div>
+                <div className="stat-value">{team2RequestData.typeAnalysis.generate}회 ({team2RequestData.typeAnalysis.generatePercent}%)</div>
+                <div className="stat-value">{team2RequestData.typeAnalysis.evaluate}회 ({team2RequestData.typeAnalysis.evaluatePercent}%)</div>
+                <div className="stat-value">{team2RequestData.typeAnalysis.feedback}회 ({team2RequestData.typeAnalysis.feedbackPercent}%)</div>
+                <div className="stat-value">{team2RequestData.typeAnalysis.other}회 ({team2RequestData.typeAnalysis.otherPercent}%)</div>
+                <div className="stat-value">{team2RequestData.totalRequests}회</div>
+              </div>
+              <div className="stats-row">
+                <div className="stat-label">사이클 3</div>
+                <div className="stat-value">{team3RequestData.typeAnalysis.generate}회 ({team3RequestData.typeAnalysis.generatePercent}%)</div>
+                <div className="stat-value">{team3RequestData.typeAnalysis.evaluate}회 ({team3RequestData.typeAnalysis.evaluatePercent}%)</div>
+                <div className="stat-value">{team3RequestData.typeAnalysis.feedback}회 ({team3RequestData.typeAnalysis.feedbackPercent}%)</div>
+                <div className="stat-value">{team3RequestData.typeAnalysis.other}회 ({team3RequestData.typeAnalysis.otherPercent}%)</div>
+                <div className="stat-value">{team3RequestData.totalRequests}회</div>
+              </div>
+              <div className="stats-row total-row">
+                <div className="stat-label">전체</div>
+                <div className="stat-value">{totalRequestData.typeAnalysis?.generate || 0}회 ({totalRequestData.typeAnalysis?.generatePercent || 0}%)</div>
+                <div className="stat-value">{totalRequestData.typeAnalysis?.evaluate || 0}회 ({totalRequestData.typeAnalysis?.evaluatePercent || 0}%)</div>
+                <div className="stat-value">{totalRequestData.typeAnalysis?.feedback || 0}회 ({totalRequestData.typeAnalysis?.feedbackPercent || 0}%)</div>
+                <div className="stat-value">{totalRequestData.typeAnalysis?.other || 0}회 ({totalRequestData.typeAnalysis?.otherPercent || 0}%)</div>
+                <div className="stat-value">{totalRequestData.totalRequests}회</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 기타 요청 유형 예시 */}
+          {(totalRequestData.otherExamples && totalRequestData.otherExamples.length > 0) && (
+            <div className="other-examples-section">
+              <h6>❓ 기타 요청 유형 상세 분석</h6>
+              <p className="section-description">
+                requestType이 비어있거나 예상하지 못한 값을 가진 요청들의 상세 내용입니다.
+              </p>
+              <div className="other-examples-container">
+                {totalRequestData.otherExamples.map((example, index) => (
+                  <div key={index} className="other-example-card">
+                    <div className="example-header">
+                      <span className="example-number">#{index + 1}</span>
+                      <span className="example-sender">발신자: {example.sender}</span>
+                      <span className="example-timestamp">
+                        {new Date(example.timestamp).toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+                    <div className="example-body">
+                      <div className="example-field">
+                        <strong>Team ID:</strong> {example.teamId}
+                      </div>
+                      <div className="example-field">
+                        <strong>Message ID:</strong> {example.messageId}
+                      </div>
+                      <div className="example-field">
+                        <strong>Request Type:</strong> 
+                        <span className="request-type-value">
+                          {example.requestType || '(빈 값)'}
+                        </span>
+                      </div>
+                      <div className="example-field">
+                        <strong>Content:</strong>
+                        <div className="content-text">
+                          {example.content || '(내용 없음)'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ResultAnalysis;

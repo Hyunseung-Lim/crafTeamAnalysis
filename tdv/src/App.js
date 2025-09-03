@@ -37,10 +37,13 @@ function App() {
       const participantNumber = ownerGroups[ownerName].participantNumber;
       const teamNumber = ownerGroups[ownerName].count;
       
-      processedTeams.push({
-        ...team,
-        displayNumber: `P${participantNumber}_team#${teamNumber}`
-      });
+      // P1-P12까지만 포함하고 팀1,2,3만 포함 (총 36개 팀)
+      if (participantNumber <= 12 && teamNumber <= 3) {
+        processedTeams.push({
+          ...team,
+          displayNumber: `P${participantNumber}_team#${teamNumber}`
+        });
+      }
     });
     
     // 사용 가능한 참가자 번호 추출

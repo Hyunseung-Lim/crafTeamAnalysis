@@ -83,9 +83,9 @@
 }
 
 .back-btn {
-  background: #f8f9fa;
-  color: #495057;
-  border: 2px solid #dee2e6;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  border: 2px solid #343a40;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
@@ -93,12 +93,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
 .back-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  color: #212529;
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  border-color: #212529;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
 

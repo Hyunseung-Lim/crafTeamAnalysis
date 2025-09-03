@@ -49,6 +49,618 @@
   border-color: #cbd5e0;
 }
 
+/* 아이디어 속성별 분석을 위한 2열 레이아웃 */
+.attribute-analysis-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.attribute-analysis-half {
+  flex: 1;
+}
+
+/* Compact table style for user vs AI comparison */
+.cycle-comparison .team-stats-table {
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.cycle-comparison .stats-header,
+.cycle-comparison .stats-row {
+  grid-template-columns: 1.5fr 1fr 0.8fr 1fr 0.8fr 1fr 1fr;
+  white-space: nowrap;
+}
+
+/* 피드백 횟수 비교 테이블 (5컬럼) */
+.feedback-count-analysis .stats-header,
+.feedback-count-analysis .stats-row {
+  grid-template-columns: 1.5fr 1fr 1fr 0.8fr 0.8fr 0.8fr;
+  white-space: nowrap;
+}
+
+/* 피드백 제공 횟수 비교 (5컬럼) */
+.feedback-comparison .cycle-comparison:first-child .stats-header,
+.feedback-comparison .cycle-comparison:first-child .stats-row {
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 0.8fr 0.8fr;
+  white-space: nowrap;
+}
+
+.cycle-comparison .stat-value {
+  padding: 0.6rem 0.3rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.cycle-comparison .stat-label {
+  padding: 0.6rem 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.attribute-analysis-half .team-stats-table {
+  margin-bottom: 0;
+}
+
+.tab-button.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.analysis-tab-content {
+  margin-top: 2rem;
+  min-height: 400px;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* 성격 분석 스타일 */
+.personality-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.personality-card {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.personality-card h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.personality-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team-breakdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.team-breakdown.total {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  font-weight: 600;
+}
+
+.team-label {
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.team-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* 역할 분석 스타일 */
+.role-analysis-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.role-stats-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.user-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.activity-category {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.activity-category h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* 멘탈 모델 변화 스타일 */
+.analysis-description {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  margin-bottom: 2rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.mental-model-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.participant-changes {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.participant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.participant-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.change-summary-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.change-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.change-badge.has-changes {
+  background: #fef5e7;
+  color: #d69e2e;
+}
+
+.change-badge.no-changes {
+  background: #f0fff4;
+  color: #38a169;
+}
+
+.change-badge.significant {
+  background: #fed7d7;
+  color: #e53e3e;
+}
+
+.changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.change-item {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.change-item.significant {
+  border-left: 4px solid #e53e3e;
+}
+
+.change-item.identical {
+  opacity: 0.6;
+}
+
+.change-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.change-transition {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.similarity-score {
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.similarity-score.low {
+  background: #fed7d7;
+  color: #e53e3e;
+}
+
+.similarity-score.medium {
+  background: #fef5e7;
+  color: #d69e2e;
+}
+
+.similarity-score.high {
+  background: #f0fff4;
+  color: #38a169;
+}
+
+.model-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.model-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.model-section strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-size: 0.85rem;
+}
+
+.model-text {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #2d3748;
+}
+
+.prev-model {
+  border-left: 3px solid #f6ad55;
+}
+
+.curr-model {
+  border-left: 3px solid #68d391;
+}
+
+.change-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.change-summary h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .analysis-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .tab-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .personality-stats-grid,
+  .user-activity-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .model-diff {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 새로운 아이디어 분석 스타일 */
+.idea-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.idea-type-analysis {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.idea-type-analysis h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .idea-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 역할 분포 분석 스타일 */
+.role-distribution-summary {
+  margin-bottom: 2rem;
+}
+
+.role-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.role-summary-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.role-summary-card h5 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.role-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.role-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.role-stat.total {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 600;
+}
+
+.role-type {
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.role-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.performance-analysis {
+  margin-top: 2rem;
+}
+
+.performance-analysis h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4a5568;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #667eea;
+  display: inline-block;
+}
+
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.performance-category {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.performance-category h5 {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .role-summary-grid,
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 사용자 역할 상세 분석 스타일 */
+.user-role-details {
+  margin-top: 1.5rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.user-role-details summary {
+  padding: 1rem;
+  background: #edf2f7;
+  cursor: pointer;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease;
+}
+
+.user-role-details summary:hover {
+  background: #e2e8f0;
+}
+
+.user-role-details[open] summary {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.user-role-analysis {
+  padding: 1.5rem;
+  background: white;
+}
+
+.role-summary {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
+.role-summary p {
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.role-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.role-breakdown .role-stat {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.role-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.role-details h5 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.role-details p {
+  margin: 0;
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+/* 역할 성과 섹션 스타일 */
+.role-performance-section {
+  background: #f0fff4;
+  border: 1px solid #c6f6d5;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.role-performance-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2f855a;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #c6f6d5;
+}
+
 .tab-button.active {
   background: #3182ce;
   border-color: #3182ce;
@@ -96,18 +708,19 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
 }
 
 .stats-header {
   display: grid;
-  grid-template-columns: 1fr repeat(4, 0.8fr);
+  grid-template-columns: 1fr repeat(4, 1.2fr);
   background: #f8f9fa;
   border-bottom: 2px solid #e2e8f0;
 }
 
 .stats-row {
   display: grid;
-  grid-template-columns: 1fr repeat(4, 0.8fr);
+  grid-template-columns: 1fr repeat(4, 1.2fr);
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -122,7 +735,7 @@
 
 .stat-label {
   padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #4a5568;
   font-weight: 600;
   border-right: 1px solid #e2e8f0;
@@ -138,7 +751,7 @@
 
 .stat-value {
   padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #2d3748;
   text-align: center;
@@ -1490,4 +2103,2862 @@
   margin-bottom: 1rem;
   font-size: 1rem;
   font-weight: 600;
+}
+
+/* Mental Model Comparison Styles */
+.participant-changes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.participant-change-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.participant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f7fafc;
+}
+
+.participant-header h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.participant-meta {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 400;
+  margin-left: 0.5rem;
+}
+
+.changes-badge {
+  background: #e6fffa;
+  color: #319795;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #81e6d9;
+}
+
+.mental-model-progression {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.change-progression {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+.change-header-clickable {
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.change-header-clickable:hover {
+  background: #edf2f7;
+}
+
+.change-header-clickable.has-changes {
+  border-left: 4px solid #f59e0b;
+}
+
+.change-header-clickable.no-changes {
+  border-left: 4px solid #10b981;
+}
+
+.progression-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.team-transition {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.expand-indicator {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.length-info {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.length-change.increase {
+  color: #059669;
+}
+
+.length-change.decrease {
+  color: #dc2626;
+}
+
+.length-change.same {
+  color: #6b7280;
+}
+
+.detailed-comparison {
+  padding: 1.5rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.no-changes-message {
+  text-align: center;
+  padding: 2rem;
+  color: #059669;
+}
+
+.no-changes-message p {
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.unchanged-content {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #166534;
+  text-align: left;
+}
+
+.simple-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.comparison-column {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.comparison-column h6 {
+  margin: 0 0 0.75rem 0;
+  color: #2d3748;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.model-content {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #4a5568;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prev-content {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.75rem;
+  border-radius: 6px;
+  color: #7f1d1d;
+}
+
+.curr-content {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  color: #14532d;
+}
+
+.diff-visualization {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.diff-visualization h6 {
+  margin: 0 0 0.75rem 0;
+  color: #2d3748;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.diff-content {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 1rem;
+}
+
+.diff-block {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  line-height: 1.6;
+}
+
+.diff-block.added {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.diff-block.deleted {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.diff-block.same {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.diff-block.modified {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.diff-text {
+  font-weight: 500;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.diff-text.added {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.diff-text.deleted {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  text-decoration: line-through;
+}
+
+.diff-text.same {
+  background: transparent;
+  color: #4a5568;
+}
+
+.diff-text.modified {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.modified-before,
+.modified-after {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.modification-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 60px;
+  margin-top: 0.2rem;
+}
+
+/* New highlight styles for inline diff */
+.model-content-with-highlights {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #4a5568;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.highlight-deleted {
+  background: #fee2e2;
+  color: #7f1d1d;
+  padding: 0.2rem 0.4rem;
+  margin: 0.1rem;
+  border-radius: 4px;
+  border: 1px solid #fecaca;
+  font-weight: 600;
+  display: inline;
+}
+
+.highlight-added {
+  background: #dcfce7;
+  color: #14532d;
+  padding: 0.2rem 0.4rem;
+  margin: 0.1rem;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+  font-weight: 600;
+  display: inline;
+}
+
+.highlight-same {
+  color: #4a5568;
+  display: inline;
+}
+
+.highlight-modified-before {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.2rem 0.4rem;
+  margin: 0.1rem;
+  border-radius: 4px;
+  border: 1px solid #fcd34d;
+  font-weight: 500;
+  display: inline;
+}
+
+.highlight-modified-after {
+  background: #ecfdf5;
+  color: #059669;
+  padding: 0.2rem 0.4rem;
+  margin: 0.1rem;
+  border-radius: 4px;
+  border: 1px solid #a7f3d0;
+  font-weight: 500;
+  display: inline;
+}
+
+.comparison-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.comparison-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.comparison-legend .highlight-deleted,
+.comparison-legend .highlight-added,
+.comparison-legend .highlight-same {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.diff-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.diff-legend .diff-text {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+@media (max-width: 1024px) {
+  .simple-comparison {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .participant-change-card {
+    padding: 1rem;
+  }
+  
+  .participant-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .participant-header h4 {
+    font-size: 1.1rem;
+  }
+  
+  .change-header-clickable {
+    padding: 0.75rem;
+  }
+  
+  .progression-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  
+  .team-transition {
+    font-size: 0.9rem;
+  }
+  
+  .detailed-comparison {
+    padding: 1rem;
+  }
+  
+  .comparison-column {
+    padding: 0.75rem;
+  }
+  
+  .diff-content {
+    font-size: 0.8rem;
+  }
+  
+  .diff-legend {
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* 성격 및 배경 분석 스타일 */
+.profile-overview {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.overview-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.overview-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.overview-breakdown {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.field-completeness h4 {
+  color: #374151;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.field-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.field-stat {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.field-name {
+  min-width: 60px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.field-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.field-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 0.3s ease;
+}
+
+.field-percentage {
+  min-width: 40px;
+  text-align: right;
+  font-weight: 600;
+  color: #059669;
+  font-size: 0.9rem;
+}
+
+.gender-stats {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.gender-team h4 {
+  color: #374151;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.gender-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.team-gender {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.team-gender.total-gender {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  font-weight: 600;
+}
+
+.team-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+.gender-count {
+  color: #6b7280;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+}
+
+.no-data-message p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.no-data-message small {
+  display: block;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: normal;
+}
+
+.section-description {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* 시각화 차트 스타일 */
+
+/* 교육 수준 바 차트 */
+.education-chart {
+  margin: 1.5rem 0;
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 600px;
+}
+
+.bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bar-label {
+  min-width: 80px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-align: right;
+}
+
+.bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  position: relative;
+  background: #f7fafc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill.education-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4299e1, #63b3ed);
+  transition: width 0.8s ease;
+  border-radius: 4px 0 0 4px;
+}
+
+.bar-value {
+  position: absolute;
+  right: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* 직업 도넛 차트 범례 */
+.profession-chart {
+  margin: 1.5rem 0;
+}
+
+.donut-container {
+  max-width: 500px;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* 전공 워드클라우드 */
+.major-word-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+}
+
+.word-cloud-item {
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.word-cloud-item:hover {
+  transform: scale(1.1);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 스킬 태그 클라우드 */
+.skills-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  justify-content: center;
+}
+
+.skill-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.skill-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.skill-name {
+  font-size: inherit;
+}
+
+.skill-count {
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  font-weight: 700;
+}
+
+/* SVG 차트 스타일 */
+
+/* 파이 차트 */
+.education-pie-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.pie-chart-container {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.pie-chart-svg, .gender-pie-svg {
+  /* 배경 제거 */
+}
+
+.pie-slice {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.pie-slice:hover {
+  opacity: 0.8;
+  filter: brightness(1.1);
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 250px;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.4rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 도넛 차트 */
+.profession-donut-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.donut-chart-container {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.donut-chart-svg {
+  /* 배경 제거 */
+}
+
+.donut-slice {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.donut-slice:hover {
+  opacity: 0.8;
+  filter: brightness(1.1);
+}
+
+/* Word Cloud Styles */
+.skills-word-cloud {
+  margin: 1.5rem 0;
+}
+
+.word-cloud-container {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  line-height: 1.8;
+  min-height: 200px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+}
+
+.skill-word {
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.skill-word:hover {
+  background: rgba(74, 144, 226, 0.1);
+}
+
+/* Skills Summary Styles */
+.skills-summary {
+  margin-top: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.skills-summary h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.top-skills-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.5rem;
+}
+
+.top-skill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.top-skill-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e0;
+}
+
+.skill-rank {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #4a90e2;
+  min-width: 30px;
+}
+
+.skill-name {
+  flex: 1;
+  font-weight: 500;
+  color: #2d3748;
+  margin: 0 1rem;
+  text-align: left;
+}
+
+.skill-count {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.donut-center-text {
+  fill: #2d3748;
+  font-family: inherit;
+}
+
+/* Character Type Analysis Styles */
+.character-type-analysis {
+  padding: 1.5rem;
+}
+
+.analysis-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.analysis-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+}
+
+.analysis-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Clustering Analysis Styles */
+.clustering-analysis {
+  margin-top: 2rem;
+}
+
+.clusters-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.cluster-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.cluster-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.cluster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.cluster-header h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+}
+
+.cluster-size {
+  background: #4A90E2;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cluster-characteristics {
+  margin-bottom: 1.5rem;
+}
+
+.characteristic-item {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.characteristic-item strong {
+  color: #2d3748;
+}
+
+.cluster-members h5 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.member-type {
+  font-size: 1rem;
+}
+
+.member-type.agent {
+  filter: hue-rotate(200deg);
+}
+
+.member-type.user {
+  filter: hue-rotate(0deg);
+}
+
+.member-name {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* 새로운 패턴 분석 스타일 */
+.characteristic-patterns {
+  margin-top: 1rem;
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 1rem;
+  border-left: 4px solid #4A90E2;
+}
+
+.pattern-section {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.pattern-section strong {
+  color: #2d3748;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.characteristic-item {
+  margin: 0.7rem 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+/* Belbin Analysis Styles */
+.belbin-analysis {
+  margin-top: 2rem;
+}
+
+.belbin-roles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.belbin-role-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.belbin-role-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.belbin-role-card.empty {
+  opacity: 0.6;
+  background: #f8f9fa;
+}
+
+.role-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.role-header h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+}
+
+.role-count {
+  background: #4A90E2;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.belbin-role-card.empty .role-count {
+  background: #cbd5e0;
+  color: #4a5568;
+}
+
+.role-description {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.role-members h5 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.members-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.belbin-member-item {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.member-score {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.member-details small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.empty-role {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 1rem;
+}
+
+/* Belbin Balance Analysis */
+.belbin-balance-analysis {
+  margin-top: 3rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.belbin-balance-analysis h4 {
+  margin: 0 0 2rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.balance-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.balance-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.balance-label {
+  min-width: 120px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.balance-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #e2e8f0;
+  border-radius: 20px;
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.balance-fill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.balance-value {
+  position: absolute;
+  right: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d3748;
+  z-index: 1;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 250px;
+}
+
+.donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.4rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 수평 바 차트 */
+.major-bar-chart {
+  margin: 2rem 0;
+}
+
+.horizontal-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 600px;
+}
+
+.horizontal-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.horizontal-bar-label {
+  min-width: 120px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-align: right;
+}
+
+.horizontal-bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* 행동 로그 분석 스타일 */
+.action-log-analysis {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.action-log-analysis .analysis-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.action-log-analysis .analysis-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.action-log-analysis .analysis-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #718096;
+}
+
+/* 통계 카드 */
+.stats-section {
+  margin-bottom: 3rem;
+}
+
+.stats-section h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 3px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.action-log-analysis .stat-value {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.action-log-analysis .stat-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* 바 차트 */
+.action-log-analysis .chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.action-log-analysis .chart-container h4 {
+  margin: 0 0 2rem 0;
+  font-size: 1.3rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.action-log-analysis .bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.action-log-analysis .bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.action-log-analysis .bar-label {
+  min-width: 120px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.action-log-analysis .bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f7fafc;
+  border-radius: 25px;
+  height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-log-analysis .bar-fill {
+  height: 100%;
+  border-radius: 25px;
+  transition: width 0.8s ease;
+}
+
+.action-log-analysis .bar-value {
+  position: absolute;
+  right: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d3748;
+  z-index: 1;
+}
+
+/* 팀별 통계 */
+.action-log-analysis .team-stats-section {
+  margin-bottom: 3rem;
+}
+
+.action-log-analysis .team-stats-section h3 {
+  margin: 0 0 2rem 0;
+  font-size: 1.5rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.action-log-analysis .team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.action-log-analysis .team-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 2px solid #e2e8f0;
+}
+
+.action-log-analysis .team-stat-card h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.action-log-analysis .team-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.action-log-analysis .team-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.action-log-analysis .stat-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.action-log-analysis .stat-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.action-log-analysis .stat-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.action-log-analysis .team-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.action-log-analysis .mini-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.action-log-analysis .mini-bar-fill {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+/* 팀간 비교 */
+.action-log-analysis .team-comparison-section {
+  margin-bottom: 3rem;
+}
+
+.action-log-analysis .team-comparison-section h3 {
+  margin: 0 0 2rem 0;
+  font-size: 1.5rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.action-log-analysis .comparison-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.action-log-analysis .comparison-item {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.action-log-analysis .comparison-item h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.2rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.action-log-analysis .comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.action-log-analysis .comparison-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.action-log-analysis .team-label {
+  min-width: 60px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.action-log-analysis .comparison-bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f7fafc;
+  border-radius: 20px;
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-log-analysis .comparison-bar-fill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.6s ease;
+}
+
+.action-log-analysis .comparison-value {
+  position: absolute;
+  right: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2d3748;
+  z-index: 1;
+}
+
+/* 패턴 분석 */
+.action-log-analysis .pattern-analysis-section {
+  margin-bottom: 2rem;
+}
+
+.action-log-analysis .pattern-analysis-section h3 {
+  margin: 0 0 2rem 0;
+  font-size: 1.5rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.action-log-analysis .pattern-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.action-log-analysis .insight-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.action-log-analysis .insight-card h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.action-log-analysis .insight-card p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.action-log-analysis .team-characteristics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.action-log-analysis .team-characteristic {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+/* 공통 활동 통계 표시 컴포넌트 스타일 */
+.activity-stats-display {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.activity-stats-display .analysis-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.activity-stats-display .analysis-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.activity-stats-display .analysis-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #718096;
+}
+
+.activity-stats-display-stat-value {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.activity-stats-display-stat-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .action-log-analysis,
+  .activity-stats-display {
+    padding: 1rem;
+  }
+  
+  .stats-cards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .action-log-analysis .stat-value,
+  .activity-stats-display-stat-value {
+    font-size: 2rem;
+  }
+  
+  .team-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .comparison-chart {
+    grid-template-columns: 1fr;
+  }
+  
+  .pattern-insights {
+    grid-template-columns: 1fr;
+  }
+}
+
+.horizontal-bar-fill {
+  height: 100%;
+  transition: width 0.8s ease;
+  border-radius: 16px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.horizontal-bar-value {
+  position: absolute;
+  right: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d3748;
+  z-index: 1;
+}
+
+/* 버블 차트 */
+.skills-bubble-chart {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 나이 막대 차트 */
+.age-bar-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.age-bar-svg, .skills-bar-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.age-bar, .skill-bar {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.age-bar:hover, .skill-bar:hover {
+  opacity: 0.8;
+}
+
+/* 성별 파이 차트 */
+.gender-pie-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.gender-pie-slice {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.gender-pie-slice:hover {
+  opacity: 0.8;
+}
+
+/* 스킬 막대 차트 */
+.skills-bar-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.bubble-circle {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bubble-circle:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
+
+.bubble-text, .bubble-count {
+  pointer-events: none;
+  font-family: inherit;
+}
+
+.bubble-legend {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.bubble-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.legend-bubble-small {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.legend-bubble-large {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #888;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .pie-chart-container, .donut-chart-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .bubble-chart-svg {
+    width: 100%;
+    height: auto;
+  }
+  
+  .horizontal-bar-label {
+    min-width: 80px;
+    font-size: 0.8rem;
+  }
+  
+  .pie-legend, .donut-legend {
+    max-width: none;
+  }
+}
+
+/* ===== ActivityStatsDisplay 컴포넌트 스타일 ===== */
+
+/* 전체 컨테이너 */
+.activity-stats-display {
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.activity-stats-display .analysis-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #f7fafc;
+}
+
+.activity-stats-display .analysis-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.activity-stats-display .analysis-header p {
+  font-size: 1.1rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* 통계 섹션 */
+.stats-section {
+  margin-bottom: 3rem;
+}
+
+.stats-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 통계 카드 그리드 */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 3px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.activity-stats-display-stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.activity-stats-display-stat-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* 차트 컨테이너 */
+.chart-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 2px solid #e9ecef;
+}
+
+.chart-container h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* 바 차트 */
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bar-label {
+  min-width: 120px;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.bar-container {
+  flex: 1;
+  position: relative;
+  background: #e9ecef;
+  border-radius: 8px;
+  height: 32px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: all 0.6s ease;
+  position: relative;
+}
+
+.bar-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+/* 팀별 상세 통계 */
+.team-stats-section {
+  margin-bottom: 3rem;
+}
+
+.team-stats-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.team-stat-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.team-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  border-color: #cbd5e0;
+}
+
+.team-stat-card h4 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #f7fafc;
+}
+
+.team-summary {
+  margin-bottom: 1.5rem;
+}
+
+.team-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.team-stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-name {
+  flex: 1;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.stat-count {
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.team-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mini-bar {
+  height: 8px;
+  background: #f1f3f4;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: all 0.6s ease;
+}
+
+/* 팀간 비교 섹션 */
+.team-comparison-section {
+  margin-bottom: 3rem;
+}
+
+.team-comparison-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comparison-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.comparison-chart-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.comparison-item {
+  background: #ffffff;
+  border: 2px solid #f7fafc;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-item-compact {
+  background: #ffffff;
+  border: 2px solid #f7fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-item h4,
+.comparison-item-compact h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.comparison-item-compact h4 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comparison-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.team-label {
+  min-width: 80px;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.comparison-bar-container {
+  flex: 1;
+  position: relative;
+  background: #f8f9fa;
+  border-radius: 6px;
+  height: 28px;
+  overflow: hidden;
+}
+
+.comparison-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: all 0.6s ease;
+}
+
+.comparison-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+/* 패턴 분석 섹션 */
+.pattern-analysis-section {
+  margin-bottom: 2rem;
+}
+
+.pattern-analysis-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pattern-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+  transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.35);
+}
+
+.insight-card h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.insight-card p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.95;
+}
+
+.team-characteristics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.team-characteristic {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.team-characteristic strong {
+  font-weight: 700;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .activity-stats-display {
+    padding: 1rem;
+  }
+  
+  .stats-cards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .activity-stats-display-stat-value {
+    font-size: 2rem;
+  }
+  
+  .team-stats-grid,
+  .comparison-chart,
+  .comparison-chart-row,
+  .pattern-insights {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .team-stat-card,
+  .comparison-item,
+  .comparison-item-compact,
+  .insight-card {
+    padding: 1.5rem;
+  }
+  
+  .bar-label,
+  .team-label {
+    min-width: 60px;
+    font-size: 0.85rem;
+  }
+}
+
+/* 요청 분석 스타일 */
+.cycle-stats {
+  margin-bottom: 2rem;
+}
+
+.cycle-stats h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2d3748;
+  border-bottom: 3px solid #4299e1;
+  padding-bottom: 0.5rem;
+}
+
+.cycle-stats .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.cycle-stats .stat-item {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cycle-stats .stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4299e1, #63b3ed);
+  border-radius: 16px 16px 0 0;
+}
+
+.cycle-stats .stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(66, 153, 225, 0.15);
+  border-color: #4299e1;
+}
+
+.cycle-stats .stat-item.total {
+  background: linear-gradient(135deg, #4299e1 0%, #63b3ed 100%);
+  color: white;
+  border-color: #3182ce;
+}
+
+.cycle-stats .stat-item.total::before {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.cycle-stats .stat-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cycle-stats .stat-item.total .stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cycle-stats .stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cycle-stats .stat-item.total .stat-value {
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cycle-stats .stat-detail {
+  font-size: 0.85rem;
+  color: #718096;
+  margin-top: 0.5rem;
+}
+
+.cycle-stats .stat-item.total .stat-detail {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cycle-stats .stat-detail div {
+  margin: 0.25rem 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .cycle-stats .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .cycle-stats .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cycle-stats .stat-item {
+    padding: 1.5rem;
+  }
+  
+  .cycle-stats .stat-value {
+    font-size: 2rem;
+  }
+  
+  .cycle-stats h4 {
+    font-size: 1.1rem;
+  }
+}
+
+/* 📋 요청 유형별 분포 분석 테이블 스타일 (5컬럼) */
+.cycle-comparison:last-child .team-stats-table .stats-header,
+.cycle-comparison:last-child .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr repeat(3, 1.5fr) 1fr !important;
+  width: 100% !important;
+}
+
+.cycle-comparison:last-child .team-stats-table .stat-value {
+  font-size: 1rem !important;
+  line-height: 1.4;
+}
+
+.cycle-comparison:last-child .team-stats-table small {
+  font-size: 0.85rem;
+  color: #718096;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.cycle-comparison:last-child .team-stats-table {
+  width: 100% !important;
+}
+
+/* 📊 요청 길이 통계, 👤🤖 개시자별 평균 요청 개시 횟수 - 7컬럼 테이블 스타일 */
+.feedback-comparison-analysis .cycle-comparison .team-stats-table .stats-header,
+.feedback-comparison-analysis .cycle-comparison .team-stats-table .stats-row {
+  grid-template-columns: 1fr repeat(6, 0.8fr) !important;
+  font-size: 0.85rem !important;
+  width: 100% !important;
+}
+
+.feedback-comparison-analysis .cycle-comparison .team-stats-table .stat-value,
+.feedback-comparison-analysis .cycle-comparison .team-stats-table .stat-label {
+  padding: 0.4rem 0.2rem !important;
+  font-size: 0.85rem !important;
+  white-space: nowrap;
+}
+
+.feedback-comparison-analysis .cycle-comparison .team-stats-table {
+  width: 100% !important;
+}
+
+/* 피드백 탭 - 6컬럼 테이블 (피드백 제공 횟수 비교) 스타일 */
+.feedback-comparison .cycle-comparison .team-stats-table .stats-header,
+.feedback-comparison .cycle-comparison .team-stats-table .stats-row {
+  grid-template-columns: 1fr repeat(5, 0.8fr);
+  font-size: 0.85rem;
+}
+
+.feedback-comparison .cycle-comparison .team-stats-table .stat-value {
+  padding: 0.4rem 0.2rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.feedback-comparison .cycle-comparison .team-stats-table .stat-label {
+  padding: 0.4rem 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* 📝 피드백 길이 비교 테이블 전용 스타일 - 강력한 줄바꿈 방지 */
+.feedback-comparison .cycle-comparison:nth-child(4) .team-stats-table .stats-header,
+.feedback-comparison .cycle-comparison:nth-child(4) .team-stats-table .stats-row {
+  grid-template-columns: 0.7fr repeat(6, 0.65fr) !important;
+  font-size: 0.75rem !important;
+  width: 100% !important;
+}
+
+.feedback-comparison .cycle-comparison:nth-child(4) .team-stats-table .stat-value,
+.feedback-comparison .cycle-comparison:nth-child(4) .team-stats-table .stat-label {
+  padding: 0.25rem 0.1rem !important;
+  font-size: 0.75rem !important;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.feedback-comparison .cycle-comparison:nth-child(4) .team-stats-table {
+  width: 100% !important;
+  min-width: 0;
+}
+
+/* 6컬럼 테이블 (사이클별 요청 횟수) 스타일 */
+.request-count-analysis .team-stats-table .stats-header,
+.request-count-analysis .team-stats-table .stats-row {
+  grid-template-columns: 1fr repeat(5, 1fr);
+  font-size: 0.95rem;
+}
+
+.request-count-analysis .team-stats-table .stat-value {
+  padding: 0.6rem 0.4rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+/* 아이디어 생성 탭 - 6컬럼 테이블 스타일 */
+.tab-content .analysis-section .team-stats-table .stats-header,
+.tab-content .analysis-section .team-stats-table .stats-row {
+  grid-template-columns: 1fr repeat(5, 1fr);
+  width: 100%;
+}
+
+.tab-content .analysis-section .team-stats-table {
+  width: 100%;
+}
+
+/* 평가 탭 - 4컬럼 테이블 스타일 */
+.evaluation-analysis .team-stats-table .stats-header,
+.evaluation-analysis .team-stats-table .stats-row,
+.comparison-section .team-stats-table .stats-header,
+.comparison-section .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr repeat(3, 1fr);
+  width: 100%;
+}
+
+.evaluation-analysis .team-stats-table,
+.comparison-section .team-stats-table {
+  width: 100%;
+}
+
+/* 📏 아이디어 속성별 내용 복잡도 분석 - 4개 테이블 스타일 */
+.attribute-analysis-half .team-stats-table {
+  width: 100% !important;
+  margin-bottom: 0;
+}
+
+.attribute-analysis-half .team-stats-table .stats-header,
+.attribute-analysis-half .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr 1fr 1fr !important;
+  width: 100% !important;
+}
+
+.attribute-analysis-half .team-stats-table .stat-label,
+.attribute-analysis-half .team-stats-table .stat-value {
+  font-size: 1rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* 속성 분석 행 전체 너비 확장 */
+.attribute-analysis-row {
+  width: 100%;
+}
+
+.attribute-analysis-half {
+  flex: 1;
+  width: 100%;
+}
+
+/* 📊 평가 기준별 점수 분포 - 3개 테이블 스타일 */
+.attribute-analysis-third .team-stats-table {
+  width: 100% !important;
+}
+
+.attribute-analysis-third .team-stats-table .stats-header,
+.attribute-analysis-third .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr 1fr 1fr !important;
+  width: 100% !important;
+}
+
+.attribute-analysis-third .team-stats-table .stat-label,
+.attribute-analysis-third .team-stats-table .stat-value {
+  font-size: 1rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.attribute-analysis-third {
+  flex: 1;
+  width: 100%;
+}
+
+/* 👥 사용자 vs AI 평가 비교 - 강제 x축 꽉 채우기 */
+.evaluation-analysis .comparison-section .team-stats-table {
+  width: 100% !important;
+}
+
+.evaluation-analysis .comparison-section .team-stats-table .stats-header,
+.evaluation-analysis .comparison-section .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr repeat(3, 1fr) !important;
+  width: 100% !important;
+}
+
+/* 👥 사용자 vs AI 코멘트 길이 비교 - 6컬럼 테이블 전용 스타일 */
+.evaluation-analysis .comparison-section:last-child .team-stats-table .stats-header,
+.evaluation-analysis .comparison-section:last-child .team-stats-table .stats-row {
+  grid-template-columns: 1fr repeat(5, 0.9fr) !important;
+  font-size: 0.9rem !important;
+}
+
+.evaluation-analysis .comparison-section:last-child .team-stats-table .stat-value,
+.evaluation-analysis .comparison-section:last-child .team-stats-table .stat-label {
+  padding: 0.5rem 0.3rem !important;
+  font-size: 0.9rem !important;
+  white-space: nowrap;
+}
+
+/* ⭐ 품질 점수 비교 - 4컬럼 테이블 강제 x축 확장 */
+.evaluation-analysis .comparison-section:nth-child(6) .team-stats-table {
+  width: 100% !important;
+}
+
+.evaluation-analysis .comparison-section:nth-child(6) .team-stats-table .stats-header,
+.evaluation-analysis .comparison-section:nth-child(6) .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr repeat(3, 1fr) !important;
+  width: 100% !important;
+}
+
+/* 📝 평가 코멘트 길이 분석 - 5컬럼 테이블 x축 확장 */
+.evaluation-analysis:last-child .team-stats-table {
+  width: 100% !important;
+}
+
+.evaluation-analysis:last-child .team-stats-table .stats-header,
+.evaluation-analysis:last-child .team-stats-table .stats-row {
+  grid-template-columns: 1.2fr repeat(4, 1fr) !important;
+  width: 100% !important;
+}
+
+/* 기타 요청 유형 예시 스타일 */
+.other-examples-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.other-example-card {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7e2 100%);
+  border: 2px solid #feb2b2;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.other-example-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(254, 178, 178, 0.3);
+  border-color: #f56565;
+}
+
+.example-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #feb2b2;
+  flex-wrap: wrap;
+}
+
+.example-number {
+  background: #f56565;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: fit-content;
+}
+
+.example-sender {
+  background: #e53e3e;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex: 1;
+  min-width: fit-content;
+}
+
+.example-timestamp {
+  color: #c53030;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(197, 48, 48, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  min-width: fit-content;
+}
+
+.example-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.example-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.example-field strong {
+  color: #c53030;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.request-type-value {
+  background: #fc8181;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.content-text {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #2d3748;
+  margin-top: 0.25rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .example-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .example-sender {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* 결과 분석 탭 스타일 */
+.result-analysis-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.result-analysis-tabs .tab-button {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.result-analysis-tabs .tab-button:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.result-analysis-tabs .tab-button.active {
+  background: #4299e1;
+  border-color: #3182ce;
+  color: white;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .result-analysis-tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .result-analysis-tabs .tab-button {
+    justify-content: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
 }
